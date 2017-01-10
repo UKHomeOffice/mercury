@@ -1,7 +1,6 @@
-AWS Library for Scala (part of RTP suite of libraries)
-======================================================
-Scala library to interact with AWS e.g. easier coding and testing against SQS and S3.
-ElasticMQ can be used for embedded testing of the SQS messaging system and S3 Mock for AWS S3 testing.
+Mercury for Scala
+=================
+TODO
 
 Application built with the following (main) technologies:
 
@@ -10,8 +9,6 @@ Application built with the following (main) technologies:
 - SBT
 
 - Akka
-
-- AWS SQS / ElasticMQ
 
 Application
 -----------
@@ -111,62 +108,4 @@ Performance tests are under src/it, and test reports are written to the "target"
 To execute Gatling performance integration tests from withing SBT:
 ```bash
 gatling-it:test
-```
-
-Example Usage
--------------
-Example of booting an application to publish/subscribe to an Amazon SQS instance.
-
-1) Start up an instance of ElasticMQ (to run an instance of Amazon SQS locally) - From the root of this project:
-```bash
-java -jar bin/elasticmq-server-0.12.1.jar
-```
-which starts up a working server that binds to localhost:9324
-
-or with a custom configuration that could create queues:
-```bash
-java -Dconfig.file=src/test/resources/application.test.conf -jar bin/elasticmq-server-0.12.1.jar
-```
-   
-2) Boot this application:
-```bash
-sbt test:run
-```
-   
-where the example application can be found under the "test" directory and is also show here:
-```scala
-import java.net.URL
-import akka.actor.{ActorSystem, Props}
-import com.amazonaws.auth.BasicAWSCredentials
-import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
-import uk.gov.homeoffice.aws.sqs._
-import uk.gov.homeoffice.aws.sqs.subscription._
-import uk.gov.homeoffice.system.Exit
-
-object ExampleBoot extends App {
-  val system = ActorSystem("amazon-sqs-actor-system")
-
-  implicit val sqsClient = new SQSClient(new URL("http://localhost:9324"), new BasicAWSCredentials("x", "x"))
-
-  val queue = new Queue("test-queue")
-
-  system actorOf Props {
-    new SubscriberActor(new Subscriber(queue)) with ExampleSubscription
-  }
-
-  new Publisher(queue) publish compact(render("input" -> "blah"))
-}
-
-trait ExampleSubscription extends JsonSubscription with Exit {
-  this: SubscriberActor =>
-
-  def receive: Receive = {
-    case m: Message => exitAfter {
-      val result = s"Well Done! Processed given message $m"
-      println(result)
-      result
-    }
-  }
-}
 ```
