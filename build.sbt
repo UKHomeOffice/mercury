@@ -21,14 +21,17 @@ resolvers ++= Seq(
 
 val `akka-version` = "2.4.16"
 val `akka-http-version` = "10.0.1"
+val `scalactic-version` = "3.0.1"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % `akka-version` withSources(),
-  "com.typesafe.akka" %% "akka-http" % `akka-http-version` withSources()
+  "com.typesafe.akka" %% "akka-http" % `akka-http-version` withSources(),
+  "org.scalactic" %% "scalactic" % `scalactic-version` withSources()
 )
 
 libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "3.8.6" % Test,
+  "org.scalatest" %% "scalatest" % `scalactic-version` % Test withSources(),
   "com.typesafe.akka" %% "akka-testkit" % `akka-version` % Test withSources(),
   "com.typesafe.akka" %% "akka-http-testkit" % `akka-http-version` % Test withSources()
 )
