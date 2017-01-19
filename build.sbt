@@ -30,10 +30,10 @@ resolvers ++= Seq(
 val `akka-version` = "2.4.16"
 val `akka-http-version` = "10.0.1"
 val `scalactic-version` = "3.0.1"
-val `akka-scala-lib-version` = "2.1.1"
-val `aws-scala-lib-version` = "1.0.1"
-val `io-scala-lib-version` = "1.9.3"
-val `test-scala-lib-version` = "1.4.1"
+val `akka-scala-lib-version` = "2.1.2"
+val `aws-scala-lib-version` = "1.0.2"
+val `io-scala-lib-version` = "1.9.4"
+val `test-scala-lib-version` = "1.4.3"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % `akka-version` withSources(),
