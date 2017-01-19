@@ -7,7 +7,7 @@ dockerfile in docker := {
 
   new Dockerfile {
     from("java")
-    expose(8080)
+    expose(9100)
     add(artifact, artifactTargetPath)
     entryPoint("java", "-jar", artifactTargetPath)
   }

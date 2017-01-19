@@ -111,9 +111,9 @@ To run and check the running service via its "health" endpoint:
 ```
 sbt docker run
 OR
-docker run -p 8080:8080 uk.gov.homeoffice/mercury
+docker run -p 9100:9100 uk.gov.homeoffice/mercury
 
-curl http://localhost:8080/healthz
+curl http://localhost:9100/health
 ```
 
 Noting that using "sbt docker run" will in fact do everything i.e. run tests, build image and run in container.
