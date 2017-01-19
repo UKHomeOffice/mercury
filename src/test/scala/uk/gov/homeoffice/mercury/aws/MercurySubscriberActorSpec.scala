@@ -4,11 +4,12 @@ import akka.actor.Props
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.{ActorExpectations, ActorSystemSpecification}
-import uk.gov.homeoffice.aws.sqs.subscription.Subscriber
-import uk.gov.homeoffice.aws.sqs.{EmbeddedSQSServer, Publisher, Queue}
+import uk.gov.homeoffice.aws.sqs.{Queue, SQSServerEmbedded}
+import uk.gov.homeoffice.aws.sqs.publish.Publisher
+import uk.gov.homeoffice.aws.sqs.subscribe.Subscriber
 
 class MercurySubscriberActorSpec(implicit env: ExecutionEnv) extends Specification with ActorSystemSpecification {
-  trait Context extends ActorSystemContext with ActorExpectations with EmbeddedSQSServer {
+  trait Context extends ActorSystemContext with ActorExpectations with SQSServerEmbedded {
     val queue = create(new Queue("test-queue"))
   }
 
