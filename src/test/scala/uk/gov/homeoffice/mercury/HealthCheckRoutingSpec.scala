@@ -1,10 +1,10 @@
-package uk.gov.homeoffice.mercury.akka.http
+package uk.gov.homeoffice.mercury
 
 import akka.http.scaladsl.model.StatusCodes._
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.http.RouteSpecification
 
-class HealthCheckServiceSpec extends Specification with RouteSpecification with HealthCheckRouting {
+class HealthCheckRoutingSpec extends Specification with RouteSpecification with HealthCheckRouting {
   "Health endpoint" should {
     "show that everything is ok" in {
       Get("/health") ~> route ~> check {

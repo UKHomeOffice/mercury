@@ -12,9 +12,9 @@ resolvers ++= Seq(
 val `akka-version` = "2.4.16"
 val `akka-http-version` = "10.0.1"
 val `scalactic-version` = "3.0.1"
-val `akka-scala-lib-version` = "2.1.2"
-val `aws-scala-lib-version` = "1.0.2"
-val `io-scala-lib-version` = "1.9.4"
+val `akka-scala-lib-version` = "2.1.4"
+val `aws-scala-lib-version` = "1.0.3"
+val `io-scala-lib-version` = "1.9.6"
 val `test-scala-lib-version` = "1.4.3"
 
 libraryDependencies ++= Seq(

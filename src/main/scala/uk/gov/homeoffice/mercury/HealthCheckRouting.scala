@@ -1,4 +1,4 @@
-package uk.gov.homeoffice.mercury.akka.http
+package uk.gov.homeoffice.mercury
 
 import akka.http.scaladsl.model.StatusCodes._
 import uk.gov.homeoffice.akka.http.Routing
