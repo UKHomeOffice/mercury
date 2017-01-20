@@ -3,7 +3,7 @@ pipeline:
   build:
     image: hseeberger/scala-sbt
     commands:
-      - sbt clean update test
+      - sbt assembly
     when:
       event: push
 
