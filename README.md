@@ -118,8 +118,8 @@ curl http://localhost:9100/health
 
 Noting that using "sbt docker run" will in fact do everything i.e. run tests, build image and run in container.
 
-SBT - Revolver
---------------
+SBT - Revolver (keep things going while developing/testing)
+-----------------------------------------------------------
 sbt-revolver is a plugin for SBT enabling a super-fast development turnaround for your Scala applications:
 
 See https://github.com/spray/sbt-revolver

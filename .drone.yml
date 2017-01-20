@@ -1,0 +1,16 @@
+pipeline:
+
+  build:
+    image: quay.io/ukhomeofficedigital/scala-sbt:v0.2.1
+    commands:
+      - sbt clean update test
+    when:
+      event: push
+
+services:
+  dind:
+    image: docker:1.11-dind
+    privileged: true
+    command:
+      - "-s"
+      - "overlay"
