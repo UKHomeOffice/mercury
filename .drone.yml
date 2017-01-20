@@ -1,7 +1,7 @@
 pipeline:
 
   build:
-    image: quay.io/ukhomeofficedigital/scala-sbt:v0.2.1
+    image: hseeberger/scala-sbt
     commands:
       - sbt clean update test
     when:
