@@ -10,12 +10,13 @@ resolvers ++= Seq(
 )
 
 val `akka-version` = "2.4.16"
-val `akka-http-version` = "10.0.1"
+val `akka-http-version` = "10.0.2"
+val `play-version` = "2.5.10"
 val `scalactic-version` = "3.0.1"
 val `akka-scala-lib-version` = "2.1.4"
-val `aws-scala-lib-version` = "1.0.3"
-val `io-scala-lib-version` = "1.9.6"
-val `test-scala-lib-version` = "1.4.3"
+val `aws-scala-lib-version` = "1.0.4"
+val `io-scala-lib-version` = "1.9.7"
+val `test-scala-lib-version` = "1.4.4"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % `akka-version` withSources(),
@@ -31,6 +32,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % `scalactic-version` % Test withSources(),
   "com.typesafe.akka" %% "akka-testkit" % `akka-version` % Test withSources(),
   "com.typesafe.akka" %% "akka-http-testkit" % `akka-http-version` % Test withSources(),
+  "com.typesafe.play" %% "play-server" % `play-version` % Test withSources(),
+  "com.typesafe.play" %% "play-test" % `play-version` % Test withSources(),
   "com.github.UKHomeOffice" %% "akka-scala-lib" % `akka-scala-lib-version` % Test classifier "tests" withSources(),
   "com.github.UKHomeOffice" %% "aws-scala-lib" % `aws-scala-lib-version` % Test classifier "tests" withSources(),
   "com.github.UKHomeOffice" %% "io-scala-lib" % `io-scala-lib-version` % Test classifier "tests" withSources(),

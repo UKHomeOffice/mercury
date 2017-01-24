@@ -120,9 +120,7 @@ Noting that using "sbt docker run" will in fact do everything i.e. run tests, bu
 
 SBT - Revolver (keep things going while developing/testing)
 -----------------------------------------------------------
-sbt-revolver is a plugin for SBT enabling a super-fast development turnaround for your Scala applications:
-
-See https://github.com/spray/sbt-revolver
+[sbt-revolver](https://github.com/spray/sbt-revolver) is a plugin for SBT enabling a super-fast development turnaround for your Scala applications:
 
 For development, you can use ~re-start to go into "triggered restart" mode.
 Your application starts up and SBT watches for changes in your source (or resource) files.
