@@ -4,7 +4,7 @@ import akka.actor.Props
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.{ActorExpectations, ActorSystemSpecification}
-import uk.gov.homeoffice.aws.sqs.publish.Publisher
+import uk.gov.homeoffice.aws.sqs.publish.{Publisher => SQSPublisher}
 import uk.gov.homeoffice.aws.sqs.subscribe.Subscriber
 import uk.gov.homeoffice.aws.sqs.{Queue, SQSServerEmbedded}
 
@@ -32,8 +32,8 @@ class SubscriberActorSpec(implicit env: ExecutionEnv) extends Specification with
 
       val subscriberActor = system actorOf Props(new SubscriberActor(new Subscriber(queue)))
 
-      val publisher = new Publisher(queue)
-      publisher publish message
+      val sqsPublisher = new SQSPublisher(queue)
+      sqsPublisher publish message
 
       eventuallyExpectMsg[String] {
         case response => response == s"Handled message: $message"
