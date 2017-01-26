@@ -90,8 +90,10 @@ running from directory of the executable JAR using a config that is within said 
 java -Dconfig.resource=application.uat.conf -jar <jar name>.jar
 ```
 
-Docker
-------
+Docker - SBT
+------------
+Firstly, using the Docker SBT plugin.
+
 Build an image (includes running tests and generating a fat JAR):
 ```
 sbt docker
@@ -117,6 +119,16 @@ curl http://localhost:9100/health
 ```
 
 Noting that using "sbt docker run" will in fact do everything i.e. run tests, build image and run in container.
+
+Docker
+------
+And now for using Docker directly.
+
+```
+docker build -t mercury .
+
+docker run -p 9100:9100 -i uk.gov.homeoffice/mercury
+```
 
 SBT - Revolver (keep things going while developing/testing)
 -----------------------------------------------------------
