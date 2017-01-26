@@ -16,7 +16,7 @@ import org.specs2.mutable.Specification
 import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.web.WebServiceSpecification
 
-class PublicationSpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification {
+class WebServiceSpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification {
   val emailsEndpoint = "/alfresco/s/cmis/p/CTS/Cases/children"
 
   val emailsRoute: PartialFunction[RequestHeader, Handler] = {
@@ -32,7 +32,7 @@ class PublicationSpec(implicit env: ExecutionEnv) extends Specification with Web
     }
   }
 
-  "Publisher" should {
+  "Web service" should {
     "publish email as plain text without any attachments" in routes(emailsRoute) { webService =>
       val email = fromInputStream(() => new ByteArrayInputStream("Email to: Jimmy".getBytes))
 

@@ -14,7 +14,7 @@ val `akka-http-version` = "10.0.2"
 val `play-version` = "2.5.10"
 val `scalactic-version` = "3.0.1"
 val `akka-scala-lib-version` = "2.1.7"
-val `aws-scala-lib-version` = "1.0.6"
+val `aws-scala-lib-version` = "1.1.1"
 val `io-scala-lib-version` = "1.9.8"
 val `test-scala-lib-version` = "1.4.4"
 
@@ -34,6 +34,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http-testkit" % `akka-http-version` % Test withSources(),
   "com.typesafe.play" %% "play-server" % `play-version` % Test withSources(),
   "com.typesafe.play" %% "play-test" % `play-version` % Test withSources(),
+  "io.findify" %% "s3mock" % "0.1.6" % Test withSources(),
   "com.github.UKHomeOffice" %% "akka-scala-lib" % `akka-scala-lib-version` % Test classifier "tests" withSources(),
   "com.github.UKHomeOffice" %% "aws-scala-lib" % `aws-scala-lib-version` % Test classifier "tests" withSources(),
   "com.github.UKHomeOffice" %% "io-scala-lib" % `io-scala-lib-version` % Test classifier "tests" withSources(),
