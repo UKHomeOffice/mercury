@@ -4,6 +4,7 @@ import akka.actor.Props
 import akka.testkit.TestActorRef
 import play.api.mvc.Action
 import play.api.mvc.BodyParsers.parse
+import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc.Results._
 import play.api.routing.sird._
 import org.specs2.concurrent.ExecutionEnv
@@ -35,6 +36,8 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
     "publish a received plain text AWS SQS message" in new Context {
       routes {
         case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action(parse.multipartFormData) { request =>
+          // I expect one file of type text/plain
+          val Seq(FilePart("email", "email.txt", Some("text/plain"), tempFile)) = request.body.files
           Ok
         }
       } { webService =>
@@ -45,6 +48,18 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
         }
 
         actor.underlyingActor publish createMessage(message) must beEqualTo("caseRef").await
+      }
+    }
+
+    "fail to publish a received plain text AWS SQS message because endpoint is not available" in new Context {
+      routes { case _ => Action(BadGateway) } { webService =>
+        val message = "A plain text message"
+
+        val actor = TestActorRef {
+          new MercuryActor(new Subscriber(queue), webService)
+        }
+
+        actor.underlyingActor publish createMessage(message) must throwAn[Exception](message = "502, Bad Gateway").await
       }
     }
   }

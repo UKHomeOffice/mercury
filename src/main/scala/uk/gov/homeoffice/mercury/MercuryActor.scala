@@ -7,8 +7,8 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.model.MediaTypes._
 import akka.stream.scaladsl.Source
 import akka.stream.scaladsl.StreamConverters.fromInputStream
+import play.api.http.Status._
 import play.api.mvc.MultipartFormData.FilePart
-import play.api.mvc.Results._
 import uk.gov.homeoffice.aws.sqs.Message
 import uk.gov.homeoffice.aws.sqs.subscribe.{Subscriber, SubscriberActor}
 import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
@@ -22,9 +22,9 @@ class MercuryActor(subscriber: Subscriber, webService: WebService)(implicit list
     val emailFilePart = FilePart("email", "email.txt", Some(`text/plain`), email)
 
     webService endpoint "/alfresco/s/cmis/p/CTS/Cases/children" post Source(List(emailFilePart)) flatMap { response =>
-      new Status(response.status) match {
-        case Ok => Future successful "caseRef" // TODO
-        case status => Future failed new Exception("TODO") // TODO
+      response.status match {
+        case OK => Future successful "caseRef" // TODO
+        case status => Future failed new Exception(s"""Failed to publish email to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""") // TODO
       }
     }
   }
