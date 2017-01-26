@@ -1,32 +1,30 @@
 package uk.gov.homeoffice.mercury
 
 import java.io.{ByteArrayInputStream, File, FileInputStream}
-import akka.http.scaladsl.model.MediaType
-import akka.stream.scaladsl.{Source, StreamConverters}
+import akka.http.scaladsl.model.MediaTypes._
 import akka.stream.scaladsl.StreamConverters._
+import akka.stream.scaladsl.{Source, StreamConverters}
 import play.api.http.Status._
 import play.api.libs.ws.WSResponse
-import play.api.mvc.{Action, Handler, RequestHeader}
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc.Results._
+import play.api.mvc.{Action, Handler, RequestHeader}
 import play.api.routing.sird._
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mutable.Specification
+import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.web.WebServiceSpecification
-import akka.http.scaladsl.model.MediaTypes._
 
 class PublicationSpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification {
-  implicit val mediaType2String: MediaType => String = _.value
-
   val emailsEndpoint = "/alfresco/s/cmis/p/CTS/Cases/children"
 
   val emailsRoute: PartialFunction[RequestHeader, Handler] = {
     case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action(parse.multipartFormData) { request =>
-      println(request.rawQueryString)
+      println(s"===> ${request.rawQueryString}")
 
       request.body.files.foreach { filePart =>
-        println("===> " + filePart.filename)
+        println(s"===> ${filePart.filename}")
         filePart.ref.moveTo(new File(s"./read-${filePart.filename}"))
       }
 
