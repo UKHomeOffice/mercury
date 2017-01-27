@@ -33,7 +33,11 @@ trait Mercury {
 
   // TODO - Future[String]? What do we really want to get back? Case ref, email address ...
   val publish: Message => Future[String] = { m =>
-    pull(Nil) flatMap { attachments =>
+    val keys: Message => Seq[String] = { m =>
+      Nil // TODO
+    }
+
+    pull(keys(m)) flatMap { attachments =>
       val email = fromInputStream(() => new ByteArrayInputStream(m.content.getBytes))
 
       val emailFilePart = FilePart("email", "email.txt", Some(`text/plain`), email)

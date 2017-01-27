@@ -78,12 +78,34 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
 
     val file = new File(s"$s3Directory/test-file.txt")
 
-    mercury.s3.push(file.getName, file).flatMap { _ =>
+    val pulledFiles = mercury.s3.push(file.getName, file) flatMap { _ =>
       mercury pull Seq(file.getName)
-    } must beLike[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] {
-      case fs: Iterable[FilePart[Source[ByteString, Future[IOResult]]]] =>
-        println(s"===> ${fs.size}")
-        ok
+    }
+
+    pulledFiles must beLike[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] {
+      case Seq(f) => f.key mustEqual file.getName
+    }.await
+  }
+
+  "pull in two files from S3" in new Context {
+    val mercury = new Mercury {
+      val s3 = new S3("test-bucket")
+      val webService = mock[WebService]
+    }
+
+    val file1 = new File(s"$s3Directory/test-file.txt")
+    val file2 = new File(s"$s3Directory/test-file-2.txt")
+
+    val pulledFiles = for {
+      _ <- mercury.s3.push(file1.getName, file1)
+      _ <- mercury.s3.push(file2.getName, file2)
+      pfs <- mercury pull Seq(file1.getName, file2.getName)
+    } yield pfs
+
+    pulledFiles must beLike[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] {
+      case Seq(f1, f2) =>
+        f1.key mustEqual file1.getName
+        f2.key mustEqual file2.getName
     }.await
   }
 }
