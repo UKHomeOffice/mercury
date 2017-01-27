@@ -22,9 +22,9 @@ trait Mercury {
 
   val pull: Seq[String] => Future[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] = { keys =>
     val fileParts = keys map { key =>
-      s3.pull(key).map { pull =>
+      s3 pull key map { pull =>
         val data = StreamConverters.fromInputStream(() => pull.inputStream)
-        FilePart(key, key, Some(`text/plain`), data)
+        FilePart(key, key, Some(`text/plain`), data) // TODO Key? Name of file? The type?
       }
     }
 
