@@ -48,7 +48,9 @@ trait Mercury {
         key -> messageAttributes.map { case (k, v) =>
           k.takeWhile(_ != '.') -> v
         }
-      }.toList.map { case (_, messageAttributes) =>
+      }.toList
+       .sortBy(_._1) // Sort by keys i.e. S3 keys
+       .map { case (_, messageAttributes) =>
         // Generate the Attachments representing what will be in S3
         (messageAttributes.get("key"), messageAttributes.get("fileName"), messageAttributes.get("contentType")) match {
           case (Some(key), Some(fileName), Some(contentType)) =>
@@ -75,7 +77,6 @@ trait Mercury {
     attachments(m).flatMap { as =>
       pull(as) flatMap { fileParts =>
         val email = fromInputStream(() => new ByteArrayInputStream(m.content.getBytes))
-
         val emailFilePart = FilePart("email", "email.txt", Some(`text/plain`), email)
 
         webService endpoint "/alfresco/s/cmis/p/CTS/Cases/children" post Source(List(emailFilePart) ++ fileParts) flatMap { response =>

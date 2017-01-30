@@ -79,8 +79,6 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
 
       routes {
         case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action(parse.multipartFormData) { request =>
-          println(s"===> ${request.body.files.size}")
-
           // Expect one file of type text/plain and a second (attachment) of type text/plain
           val Seq(FilePart("email", "email.txt", Some(`text/plain`), emailFile),
                   FilePart(`file-name`, `file-name`, Some(`text/plain`), attachmentFile)) = request.body.files
@@ -92,15 +90,45 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           val webService = ws
         }
 
-        val file = new File(s"$s3Directory/test-file.txt")
-
         val message = createMessage("A plain text message").modify(_.sqsMessage)
           .using(_.addAttributesEntry("key", "test-file.txt").addAttributesEntry("fileName", "test-file.txt").addAttributesEntry("contentType", `text/plain`))
-          //.using(_.addAttributesEntry("key.1", "test-file.txt").addAttributesEntry("fileName.1", "test-file.txt").addAttributesEntry("contentType.1", `text/plain`))
 
         mercury.s3.push(file.getName, file) flatMap { _ =>
           mercury publish message
         } must beEqualTo("caseRef").await
+      }
+    }
+
+    "publish an AWS SQS message with two associated attachments" in new Context {
+      val file1 = new File(s"$s3Directory/test-file-1.txt")
+      val `file-name-1` = file1.getName
+
+      val file2 = new File(s"$s3Directory/test-file-2.txt")
+      val `file-name-2` = file2.getName
+
+      routes {
+        case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action(parse.multipartFormData) { request =>
+          // Expect one file of type text/plain, a second (attachment) of type text/plain and third (attachment) of type text/plain
+          val Seq(FilePart("email", "email.txt", Some(`text/plain`), _),
+                  FilePart(`file-name-1`, `file-name-1`, Some(`text/plain`), _),
+                  FilePart(`file-name-2`, `file-name-2`, Some(`text/plain`), _)) = request.body.files
+          Ok
+        }
+      } { ws =>
+        val mercury = new Mercury {
+          val s3 = new S3("test-bucket")
+          val webService = ws
+        }
+
+        val message = createMessage("A plain text message").modify(_.sqsMessage)
+          .using(_.addAttributesEntry("key.1", "test-file-1.txt").addAttributesEntry("fileName.1", "test-file-1.txt").addAttributesEntry("contentType.1", `text/plain`)
+                  .addAttributesEntry("key.2", "test-file-2.txt").addAttributesEntry("fileName.2", "test-file-2.txt").addAttributesEntry("contentType.2", `text/plain`))
+
+        (for {
+          _ <- mercury.s3.push(file1.getName, file1)
+          _ <- mercury.s3.push(file2.getName, file2)
+          caseRef <- mercury publish message
+        } yield caseRef) must beEqualTo("caseRef").await
       }
     }
   }
