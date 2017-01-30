@@ -10,4 +10,4 @@ fork in Test := true
 
 publishArtifact in Test := true
 
-mainClass := Some("uk.gov.homeoffice.mercury.Boot")
+mainClass := Some("uk.gov.homeoffice.mercury.boot.Boot")
