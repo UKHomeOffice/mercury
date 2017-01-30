@@ -22,6 +22,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % `akka-version` withSources(),
   "com.typesafe.akka" %% "akka-http" % `akka-http-version` withSources(),
   "org.scalactic" %% "scalactic" % `scalactic-version` withSources(),
+  "com.softwaremill.quicklens" %% "quicklens" % "1.4.8" withSources(),
   "com.github.UKHomeOffice" %% "akka-scala-lib" % `akka-scala-lib-version` withSources(),
   "com.github.UKHomeOffice" %% "aws-scala-lib" % `aws-scala-lib-version` withSources(),
   "com.github.UKHomeOffice" %% "io-scala-lib" % `io-scala-lib-version` withSources()
