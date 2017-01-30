@@ -15,7 +15,7 @@ import com.softwaremill.quicklens._
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
-import uk.gov.homeoffice.aws.s3.{S3, S3ServerEmbedded}
+import uk.gov.homeoffice.aws.s3.{Attachment, S3, S3ServerEmbedded}
 import uk.gov.homeoffice.aws.sqs.SQSServerEmbedded
 import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.web.{WebService, WebServiceSpecification}

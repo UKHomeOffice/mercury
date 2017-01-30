@@ -12,7 +12,7 @@ import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
 import play.api.http.Status._
 import play.api.mvc.MultipartFormData.FilePart
-import uk.gov.homeoffice.aws.s3.S3
+import uk.gov.homeoffice.aws.s3.{Attachment, S3}
 import uk.gov.homeoffice.aws.sqs.Message
 import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.web.WebService
