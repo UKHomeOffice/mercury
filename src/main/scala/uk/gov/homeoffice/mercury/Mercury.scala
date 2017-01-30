@@ -35,18 +35,22 @@ trait Mercury {
 
   // TODO - Future[String]? What do we really want to get back? Case ref, email address ...
   val publish: Message => Future[String] = { m =>
+    val KeyRegex = """(.*)\.(\d*)""".r
+
     val attachments: Message => Future[Seq[Attachment]] = { message =>
       val attachments = message.sqsMessage.getAttributes.toMap.map { case (k, v) =>
         // Either there is 1 attachment, which has not been identified with an index (so add an index) or there is 1 or more attachments with an index
-        if (k contains ".") k -> v
+        if (k matches KeyRegex.regex) k -> v
         else s"$k.1" -> v
       }.groupBy { case (k, _) =>
-        // Group message attributes by indexes since there can be 0, 1 or more attachments
-        k.dropWhile(_ != '.')
+        // Group message attributes by indexes associated with 1 or more attachments
+        val KeyRegex(_, number) = k
+        number
       }.map { case (key, messageAttributes) =>
-        // Attachments won't actually be held in S3 with indexes, so we have to strip them out
+        // Attachments won't actually be held in S3 with indexes (just unique keys), so we have to strip indexes out
         key -> messageAttributes.map { case (k, v) =>
-          k.takeWhile(_ != '.') -> v
+          val KeyRegex(key, _) = k
+          key -> v
         }
       }.toList
        .sortBy(_._1) // Sort by keys i.e. S3 keys
