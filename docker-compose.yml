@@ -1,0 +1,12 @@
+mercury:
+  image: uk.gov.homeoffice/mercury
+  ports:
+    - 9100:9100
+  links:
+    - elasticmq
+  command: java -jar /app/mercury.jar
+
+elasticmq:
+  image: kcomlabs/elasticmq
+  ports:
+    - 9324:9324
