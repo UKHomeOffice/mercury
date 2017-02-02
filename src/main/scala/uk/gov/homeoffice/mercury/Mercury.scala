@@ -83,7 +83,7 @@ trait Mercury {
         val email = fromInputStream(() => new ByteArrayInputStream(m.content.getBytes))
         val emailFilePart = FilePart("email", "email.txt", Some(`text/plain`), email)
 
-        webService endpoint "/alfresco/s/cmis/p/CTS/Cases/children" post Source(List(emailFilePart) ++ fileParts) flatMap { response =>
+        webService endpoint "/alfresco/s/homeoffice/cts/autoCreateDocument" post Source(List(emailFilePart) ++ fileParts) flatMap { response =>
           response.status match {
             case OK => Future successful "caseRef" // TODO
             case _ => Future failed new Exception(s"""Failed to publish email to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")

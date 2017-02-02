@@ -26,9 +26,26 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
   "Mercury" should {
     val `text/plain`: String = akka.http.scaladsl.model.MediaTypes.`text/plain`
 
+    /*"fail to publish an AWS SQS message because it is not authorized" in new Context {
+      routes {
+        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
+          // Expect one file of type text/plain
+          val Seq(FilePart("email", "email.txt", Some(`text/plain`), _)) = request.body.files
+          Unauthorized
+        }
+      } { ws =>
+        val mercury = new Mercury {
+          val s3 = mock[S3]
+          val webService = ws
+        }
+
+        mercury publish createMessage("A plain text message") must beEqualTo("caseRef").await
+      }
+    }*/
+
     "publish an AWS SQS message" in new Context {
       routes {
-        case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action(parse.multipartFormData) { request =>
+        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
           // Expect one file of type text/plain
           val Seq(FilePart("email", "email.txt", Some(`text/plain`), _)) = request.body.files
           Ok
@@ -58,7 +75,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       todo
 
       /*routes {
-        case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action(parse.multipartFormData) { request =>
+        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
           // Expect one file of type text/plain
           val Seq(FilePart("email", "email.txt", Some("text/plain"), tempFile)) = request.body.files
           Ok
@@ -78,7 +95,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       val `file-name` = file.getName
 
       routes {
-        case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action(parse.multipartFormData) { request =>
+        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
           // Expect one file of type text/plain and a second (attachment) of type text/plain
           val Seq(FilePart("email", "email.txt", Some(`text/plain`), emailFile),
                   FilePart(`file-name`, `file-name`, Some(`text/plain`), attachmentFile)) = request.body.files
@@ -107,7 +124,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       val `file-name-2` = file2.getName
 
       routes {
-        case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action(parse.multipartFormData) { request =>
+        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
           // Expect one file of type text/plain, a second (attachment) of type text/plain and third (attachment) of type text/plain
           val Seq(FilePart("email", "email.txt", Some(`text/plain`), _),
                   FilePart(`file-name-1`, `file-name-1`, Some(`text/plain`), _),

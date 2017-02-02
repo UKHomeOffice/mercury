@@ -20,7 +20,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
   "Mercury actor" should {
     "receive an AWS SQS message as plain text" in new Context {
       routes {
-        case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action { request =>
+        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action { request =>
           Ok
         }
       } { webService =>
@@ -39,7 +39,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
   "Mercury actor subscription" should {
     "be captured as plain text" in new Context {
       routes {
-        case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action { request =>
+        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action { request =>
           Ok
         }
       } { webService =>

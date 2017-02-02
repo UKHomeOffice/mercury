@@ -17,10 +17,10 @@ import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.web.WebServiceSpecification
 
 class WebServiceSpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification {
-  val emailsEndpoint = "/alfresco/s/cmis/p/CTS/Cases/children"
+  val emailsEndpoint = "/alfresco/s/homeoffice/cts/autoCreateDocument"
 
   val emailsRoute: PartialFunction[RequestHeader, Handler] = {
-    case POST(p"/alfresco/s/cmis/p/CTS/Cases/children") => Action(parse.multipartFormData) { request =>
+    case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
       println(s"===> ${request.rawQueryString}")
 
       request.body.files.foreach { filePart =>
