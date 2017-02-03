@@ -11,16 +11,39 @@ import akka.stream.scaladsl.StreamConverters.fromInputStream
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
 import play.api.http.Status._
+import play.api.libs.json.Json
 import play.api.mvc.MultipartFormData.FilePart
+import grizzled.slf4j.Logging
 import uk.gov.homeoffice.aws.s3.{Attachment, S3}
 import uk.gov.homeoffice.aws.sqs.Message
 import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.web.WebService
 
-trait Mercury {
-  val s3: S3
+object Mercury {
+  val authorizationEndpoint = "/alfresco/s/api/login"
 
-  val webService: WebService
+  def authorize(login: Login)(implicit webService: WebService): Future[WebService with Authorization] = {
+    val credentials = Json.obj(
+      "username" -> login.userName,
+      "password" -> login.password
+    )
+
+    webService endpoint authorizationEndpoint post credentials flatMap { response =>
+      response.status match {
+        case OK => Future successful new WebService(webService.host, webService.wsClient) with Authorization {
+          override val token: String = (response.json \ "data" \ "ticket").as[String]
+        }
+
+        case _ => Future failed new Exception(s"""Failed to authorize against "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")
+      }
+    }
+  }
+
+  def apply(s3: S3, webService: WebService with Authorization) = new Mercury(s3, webService)
+}
+
+class Mercury(val s3: S3, val webService: WebService with Authorization) extends Logging {
+  val publicationEndpoint = "/alfresco/s/homeoffice/cts/autoCreateDocument"
 
   val pull: Seq[Attachment] => Future[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] = { attachments =>
     val fileParts = attachments map { attachment =>
@@ -35,6 +58,7 @@ trait Mercury {
 
   // TODO - Future[String]? What do we really want to get back? Case ref, email address ...
   val publish: Message => Future[String] = { m =>
+    info(m)
     val KeyRegex = """(.*)\.(\d*)""".r
 
     val attachments: Message => Future[Seq[Attachment]] = { message =>
@@ -78,12 +102,15 @@ trait Mercury {
       Future.sequence(attachments)
     }
 
-    attachments(m).flatMap { as =>
+    attachments(m) flatMap { as =>
       pull(as) flatMap { fileParts =>
         val email = fromInputStream(() => new ByteArrayInputStream(m.content.getBytes))
         val emailFilePart = FilePart("email", "email.txt", Some(`text/plain`), email)
 
-        webService endpoint "/alfresco/s/homeoffice/cts/autoCreateDocument" post Source(List(emailFilePart) ++ fileParts) flatMap { response =>
+        val numberOfFileParts = if (fileParts.size == 1) "1 attachment" else s"${fileParts.size} attachments"
+        info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, email which starts with "${m.content.substring(0, 20)}" with $numberOfFileParts""")
+
+        webService endpoint publicationEndpoint post Source(List(emailFilePart) ++ fileParts) flatMap { response =>
           response.status match {
             case OK => Future successful "caseRef" // TODO
             case _ => Future failed new Exception(s"""Failed to publish email to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")

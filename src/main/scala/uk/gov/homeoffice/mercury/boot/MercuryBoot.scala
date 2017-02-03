@@ -28,11 +28,11 @@ trait MercuryBoot extends HasConfig {
 
     implicit lazy val sqsClient = new SQSClient(sqsHost, new BasicAWSCredentials(accessKey, secretKey))
 
-    def apply() = new SQS(create(new Queue(config.text("aws.sqs.queues.mercury-queue", "mercury-local"))))
+    def apply() = new SQS(create(new Queue(config.text("aws.sqs.queues.mercury-queue", "mercury"))))
   }
 
   object S3 {
-    lazy val s3Host = new URL(config.text("aws.s3.uri", "http://localhost:80"))
+    lazy val s3Host = new URL(config.text("aws.s3.uri", "http://0.0.0.0:4569"))
 
     lazy val accessKey = config.text("aws.s3.credentials.access-key", "x")
     lazy val secretKey = config.text("aws.s3.credentials.secret-key", "x")
@@ -43,7 +43,7 @@ trait MercuryBoot extends HasConfig {
   }
 
   object WebService {
-    lazy val webServiceHost = new URL(config.text("web-service.uri", "http://localhost:9100/alfresco/s/cmis/p/CTS/Cases/children"))
+    lazy val webServiceHost = new URL(config.text("web-service.uri", "http://localhost:9500"))
 
     implicit val system = ActorSystem()
     implicit val materializer = ActorMaterializer()

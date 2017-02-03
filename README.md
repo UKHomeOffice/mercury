@@ -130,6 +130,9 @@ docker build -t mercury .
 We need an instance of ElasticMQ:
 docker run --name elasticmq -p 9324:9324 -e ELASTICMQ_OPTS="-Dnode-address.host=*" kcomlabs/elasticmq
 
+We need an instance of S3
+docker run --name s3 -p 4569:4569 lphoward/fake-s3
+
 docker run --link elasticmq:elasticmq -p 9100:9100 -i uk.gov.homeoffice/mercury
 ```
 

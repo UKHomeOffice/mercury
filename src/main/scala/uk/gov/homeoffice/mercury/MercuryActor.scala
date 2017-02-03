@@ -14,13 +14,13 @@ object MercuryActor {
   }
 }
 
-class MercuryActor(sqs: SQS, val s3: S3, val webService: WebService)(implicit listeners: Seq[ActorRef] = Seq.empty[ActorRef]) extends SQSActor(sqs) with Mercury {
+class MercuryActor(sqs: SQS, val s3: S3, val webService: WebService)(implicit listeners: Seq[ActorRef] = Seq.empty[ActorRef]) extends SQSActor(sqs) /*with Mercury*/ {
   override def receive: Receive = {
     case m: Message =>
       val client = sender()
 
-      publish(m).map { caseRef => // TODO Is it just "caseRef"???
+      /*publish(m) map { caseRef => // TODO Is it just "caseRef"???
         client ! caseRef
-      }
+      }*/
   }
 }
