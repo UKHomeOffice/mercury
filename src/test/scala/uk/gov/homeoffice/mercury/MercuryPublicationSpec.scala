@@ -34,23 +34,25 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
         } must beEqualTo("caseRef").await
       }
     }
-  }
 
-  /*
-    "fail to publish an AWS SQS message because it is not authorized" in new Context {
-      routes {
-        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
-          Unauthorized
-        }
-      } { ws =>
-        val mercury = new Mercury {
-          val s3 = mock[S3]
-          val webService = ws
-        }
+    "fail to publish an AWS SQS message because it is not authorized" in new MercuryServicesContext {
+      routes(loginRoute orElse loginCheck) { implicit ws =>
 
-        mercury publish createMessage("A plain text message") must throwAn[Exception](message = "401, Unauthorized").await
+        Mercury authorize login flatMap { webService =>
+          val mercury = new Mercury(mock[S3], webService) {
+            override val authorizationParam: (String, String) = "" -> ""
+          }
+
+          mercury publish createMessage("A plain text message")
+
+        } must throwAn[Exception](message = "401, Unauthorized").await
       }
     }
+  }
+
+
+  /*
+
 
     "fail to publish an AWS SQS message because it cannot be authorized when missing required authorized token" in new Context {
       val mercury = new Mercury {

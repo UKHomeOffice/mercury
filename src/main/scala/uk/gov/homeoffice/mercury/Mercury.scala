@@ -43,6 +43,8 @@ object Mercury {
 }
 
 class Mercury(val s3: S3, val webService: WebService with Authorization) extends Logging {
+  val authorizationParam = "alf_ticket" -> webService.token
+
   val publicationEndpoint = "/alfresco/s/homeoffice/cts/autoCreateDocument"
 
   val pull: Seq[Attachment] => Future[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] = { attachments =>
@@ -110,7 +112,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
         val numberOfFileParts = if (fileParts.size == 1) "1 attachment" else s"${fileParts.size} attachments"
         info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, email which starts with "${m.content.substring(0, 20)}" with $numberOfFileParts""")
 
-        webService endpoint publicationEndpoint post Source(List(emailFilePart) ++ fileParts) flatMap { response =>
+        webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(emailFilePart) ++ fileParts) flatMap { response =>
           response.status match {
             case OK => Future successful "caseRef" // TODO
             case _ => Future failed new Exception(s"""Failed to publish email to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")
