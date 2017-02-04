@@ -22,6 +22,8 @@ import uk.gov.homeoffice.web.WebService
 object Mercury {
   val authorizationEndpoint = "/alfresco/s/api/login"
 
+  val publicationEndpoint = "/alfresco/s/homeoffice/cts/autoCreateDocument"
+
   def authorize(login: Login)(implicit webService: WebService): Future[WebService with Authorization] = {
     val credentials = Json.obj(
       "username" -> login.userName,
@@ -43,9 +45,9 @@ object Mercury {
 }
 
 class Mercury(val s3: S3, val webService: WebService with Authorization) extends Logging {
-  val authorizationParam = "alf_ticket" -> webService.token
+  import Mercury._
 
-  val publicationEndpoint = "/alfresco/s/homeoffice/cts/autoCreateDocument"
+  val authorizationParam = "alf_ticket" -> webService.token
 
   val pull: Seq[Attachment] => Future[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] = { attachments =>
     val fileParts = attachments map { attachment =>
