@@ -10,12 +10,14 @@ import play.api.mvc.MultipartFormData.FilePart
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
-import uk.gov.homeoffice.aws.s3.{Attachment, S3, S3ServerEmbedded}
+import uk.gov.homeoffice.aws.s3.{Attachment, S3}
 import uk.gov.homeoffice.web.{WebService, WebServiceSpecification}
 
 class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification with Mockito {
-  trait Context extends S3ServerEmbedded {
-    val mercury = new Mercury(new S3("test-bucket"), mock[WebService with Authorization])
+  trait Context extends MercuryServicesContext {
+    val mercury = new Mercury(new S3("test-bucket"), mock[WebService with Authorization]) {
+      override lazy val authorizationParam = "alf_ticket" -> ticket
+    }
   }
 
   "Mercury" should {

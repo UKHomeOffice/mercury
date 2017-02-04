@@ -39,7 +39,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
       routes(loginRoute orElse loginCheck) { implicit ws =>
         val result = Mercury authorize login flatMap { webService =>
           val mercury = new Mercury(mock[S3], webService) {
-            override val authorizationParam: (String, String) = "" -> ""
+            override lazy val authorizationParam = "" -> ""
           }
 
           mercury publish createMessage("A plain text message")

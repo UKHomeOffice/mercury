@@ -47,7 +47,7 @@ object Mercury {
 class Mercury(val s3: S3, val webService: WebService with Authorization) extends Logging {
   import Mercury._
 
-  val authorizationParam = "alf_ticket" -> webService.token
+  lazy val authorizationParam = "alf_ticket" -> webService.token
 
   val pull: Seq[Attachment] => Future[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] = { attachments =>
     val fileParts = attachments map { attachment =>
