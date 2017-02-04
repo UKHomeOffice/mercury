@@ -70,6 +70,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
         val sqs = new SQS(queue)
         system actorOf Props(new MercuryActor(sqs, mock[S3], login, webService))
 
+        TimeUnit.SECONDS.sleep(5) // TODO - This is naff
         sqs publish message
 
         eventuallyExpectMsg[String] {

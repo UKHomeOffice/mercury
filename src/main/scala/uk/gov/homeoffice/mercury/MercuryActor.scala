@@ -1,6 +1,7 @@
 package uk.gov.homeoffice.mercury
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import akka.actor.{ActorRef, Props}
 import uk.gov.homeoffice.aws.s3.S3
 import uk.gov.homeoffice.aws.sqs.{Message, SQS, SQSActor}
@@ -15,15 +16,23 @@ object MercuryActor {
 }
 
 class MercuryActor(sqs: SQS, val s3: S3, login: Login, implicit val webService: WebService)(implicit listeners: Seq[ActorRef] = Seq.empty[ActorRef]) extends SQSActor(sqs) {
+  implicit val ec = context.dispatcher
+
   override def preStart(): Unit = {
     super.preStart()
-
-    Mercury authorize login map { webService =>
-      context become authorized(webService)
-    }
+    self ! AuthorizeMercury
   }
 
   override def receive: Receive = {
+    case AuthorizeMercury =>
+      Mercury authorize login map { webService =>
+        context become authorized(webService)
+      } recover {
+        case t: Throwable =>
+          error(s"Failed to authorize Mercury with webservice ${webService.host} because of ${t.getMessage}")
+          context.system.scheduler.scheduleOnce(10 seconds, self, AuthorizeMercury)
+      }
+
     case m: Message =>
       val warning = "Received a message but not authorized to publish it"
       warn(warning)
@@ -37,9 +46,11 @@ class MercuryActor(sqs: SQS, val s3: S3, login: Login, implicit val webService: 
       case m: Message =>
         val client = sender()
 
-        mercury.publish(m).map { caseRef => // TODO Is it just "caseRef"???
+        mercury publish m map { caseRef => // TODO Is it just "caseRef"???
           client ! caseRef
         }
     }
   }
 }
+
+case object AuthorizeMercury
