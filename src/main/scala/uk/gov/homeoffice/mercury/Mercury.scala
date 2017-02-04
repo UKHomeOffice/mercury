@@ -11,7 +11,6 @@ import akka.stream.scaladsl.StreamConverters.fromInputStream
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
 import play.api.http.Status._
-import play.api.libs.json.Json
 import play.api.mvc.MultipartFormData.FilePart
 import grizzled.slf4j.Logging
 import uk.gov.homeoffice.aws.s3.{Attachment, S3}
@@ -24,12 +23,7 @@ object Mercury {
 
   val publicationEndpoint = "/alfresco/s/homeoffice/cts/autoCreateDocument"
 
-  def authorize(login: Login)(implicit webService: WebService): Future[WebService with Authorization] = {
-    val credentials = Json.obj(
-      "username" -> login.userName,
-      "password" -> login.password
-    )
-
+  def authorize(credentials: Credentials)(implicit webService: WebService): Future[WebService with Authorization] = {
     webService endpoint authorizationEndpoint post credentials flatMap { response =>
       response.status match {
         case OK => Future successful new WebService(webService.host, webService.wsClient) with Authorization {

@@ -9,12 +9,12 @@ import uk.gov.homeoffice.aws.s3.S3ServerEmbedded
 import uk.gov.homeoffice.aws.sqs.SQSServerEmbedded
 
 trait MercuryServicesContext extends SQSServerEmbedded with S3ServerEmbedded {
-  val userName = "emailapiuser"
-  val password = "Password1"
-  val login = Login(userName, password)
-  val ticket = "TICKET_1"
+  val userName = "userName"
+  val password = "password"
+  val credentials = Credentials(userName, password)
+  val ticket = "TICKET"
 
-  val loginRoute: PartialFunction[RequestHeader, Handler] = {
+  val authorizeRoute: PartialFunction[RequestHeader, Handler] = {
     case POST(p"/alfresco/s/api/login") => Action(parse.json) { implicit request =>
       (param("username"), param("password")) match {
         case (Some(`userName`), Some(`password`)) => Ok(Json.obj("data" -> Json.obj("ticket" -> ticket)))
@@ -23,7 +23,7 @@ trait MercuryServicesContext extends SQSServerEmbedded with S3ServerEmbedded {
     }
   }
 
-  val loginCheck: PartialFunction[RequestHeader, Handler] = {
+  val authorizeCheck: PartialFunction[RequestHeader, Handler] = {
     case rh if !rh.getQueryString("alf_ticket").contains(ticket) => Action {
       Unauthorized
     }

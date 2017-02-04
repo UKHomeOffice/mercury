@@ -1,6 +1,5 @@
 Mercury for Scala
 =================
-TODO
 
 Application built with the following (main) technologies:
 
@@ -9,6 +8,18 @@ Application built with the following (main) technologies:
 - SBT
 
 - Akka
+
+- AWS SQS
+
+- AWS S3
+
+- Play Web Services
+
+Introduction
+------------
+Subscribes to messages (specifically emails) published to AWS SQS.
+These messages are consumed and translated (1st phase will be to PDF) and any associated attachments will be streamed in from AWS S3.
+Finally, messages and associated attachments are streamed to another service.
 
 Application
 -----------

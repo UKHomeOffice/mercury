@@ -19,14 +19,14 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
 
   "Mercury" should {
     "publish an AWS SQS message" in new MercuryServicesContext {
-      routes(loginRoute orElse loginCheck orElse {
+      routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
           // Expect one file of type text/plain
           val Seq(FilePart("email", "email.txt", Some(`text/plain`), _)) = request.body.files
           Ok
         }
       }) { implicit ws =>
-        val result = Mercury authorize login flatMap { webService =>
+        val result = Mercury authorize credentials flatMap { webService =>
           val mercury = Mercury(mock[S3], webService)
           mercury publish createMessage("A plain text message")
         }
@@ -36,8 +36,8 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
     }
 
     "fail to publish an AWS SQS message because it is not authorized" in new MercuryServicesContext {
-      routes(loginRoute orElse loginCheck) { implicit ws =>
-        val result = Mercury authorize login flatMap { webService =>
+      routes(authorizeRoute orElse authorizeCheck) { implicit ws =>
+        val result = Mercury authorize credentials flatMap { webService =>
           val mercury = new Mercury(mock[S3], webService) {
             override lazy val authorizationParam = "" -> ""
           }
@@ -50,10 +50,10 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
     }
 
     "fail to publish an AWS SQS message because endpoint is not available" in new MercuryServicesContext {
-      routes(loginRoute orElse loginCheck orElse {
+      routes(authorizeRoute orElse authorizeCheck orElse {
         case _ => Action(BadGateway)
       }) { implicit ws =>
-        val result = Mercury authorize login flatMap { webService =>
+        val result = Mercury authorize credentials flatMap { webService =>
           val mercury = Mercury(mock[S3], webService)
           mercury publish createMessage("A plain text message")
         }
@@ -85,7 +85,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
       val file = new File(s"$s3Directory/test-file.txt")
       val `file-name` = file.getName
 
-      routes(loginRoute orElse loginCheck orElse {
+      routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
           // Expect one file of type text/plain and a second (attachment) of type text/plain
           val Seq(FilePart("email", "email.txt", Some(`text/plain`), emailFile),
@@ -93,7 +93,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
           Ok
         }
       }) { implicit ws =>
-        val result = Mercury authorize login flatMap { webService =>
+        val result = Mercury authorize credentials flatMap { webService =>
           val mercury = Mercury(new S3("test-bucket"), webService)
 
           val message = createMessage("A plain text message")
@@ -117,7 +117,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
     val file2 = new File(s"$s3Directory/test-file-2.txt")
     val `file-name-2` = file2.getName
 
-    routes(loginRoute orElse loginCheck orElse {
+    routes(authorizeRoute orElse authorizeCheck orElse {
       case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
         // Expect one file of type text/plain, a second (attachment) of type text/plain and third (attachment) of type text/plain
         val Seq(FilePart("email", "email.txt", Some(`text/plain`), _),
@@ -126,7 +126,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
         Ok
       }
     }) { implicit ws =>
-      val result = Mercury authorize login flatMap { webService =>
+      val result = Mercury authorize credentials flatMap { webService =>
         val mercury = Mercury(new S3("test-bucket"), webService)
 
         val message = createMessage("A plain text message")

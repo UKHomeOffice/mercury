@@ -20,14 +20,14 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
   "Mercury actor" should {
     "receive an AWS SQS message as plain text, but not be in an authorized state to publish it" in new Context {
-      routes(loginRoute orElse loginCheck orElse {
+      routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action {
           Ok
         }
       }) { webService =>
         val message = "A plain text message"
 
-        val mercuryActor = system actorOf Props(new MercuryActor(new SQS(queue), mock[S3], login, webService))
+        val mercuryActor = system actorOf Props(new MercuryActor(new SQS(queue), mock[S3], credentials, webService))
         mercuryActor ! createMessage(message)
 
         eventuallyExpectMsg[String] {
@@ -37,14 +37,14 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
     }
 
     "receive an AWS SQS message as plain text" in new Context {
-      routes(loginRoute orElse loginCheck orElse {
+      routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action {
           Ok
         }
       }) { webService =>
         val message = "A plain text message"
 
-        val mercuryActor = system actorOf Props(new MercuryActor(new SQS(queue), mock[S3], login, webService))
+        val mercuryActor = system actorOf Props(new MercuryActor(new SQS(queue), mock[S3], credentials, webService))
 
         TimeUnit.SECONDS.sleep(5) // TODO - This is naff
         mercuryActor ! createMessage(message)
@@ -58,7 +58,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
   "Mercury actor subscription" should {
     "be captured as plain text" in new Context {
-      routes(loginRoute orElse loginCheck orElse {
+      routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action {
           Ok
         }
@@ -68,7 +68,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
         val message = "A plain text message"
 
         val sqs = new SQS(queue)
-        system actorOf Props(new MercuryActor(sqs, mock[S3], login, webService))
+        system actorOf Props(new MercuryActor(sqs, mock[S3], credentials, webService))
 
         TimeUnit.SECONDS.sleep(5) // TODO - This is naff
         sqs publish message
