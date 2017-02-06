@@ -10,6 +10,8 @@ fork in Test := true
 
 publishArtifact in Test := true
 
+initialCommands in (Test, console) := "ammonite.Main().run()"
+
 mainClass := Some("uk.gov.homeoffice.mercury.boot.Boot")
 
 lazy val IT = config("it") extend Test

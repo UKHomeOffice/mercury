@@ -101,6 +101,11 @@ running from directory of the executable JAR using a config that is within said 
 java -Dconfig.resource=application.uat.conf -jar <jar name>.jar
 ```
 
+As a sidenote, [Ammonite](http://www.lihaoyi.com/Ammonite) is referenced in this module - to use it's powerful REPL:
+```
+sbt test:console
+```
+
 Docker - SBT
 ------------
 Firstly, using the Docker SBT plugin.
@@ -145,7 +150,7 @@ We need an instance of S3
 docker run --name s3 -p 4569:4569 lphoward/fake-s3
 
 docker run --link elasticmq:elasticmq -p 9100:9100 -i uk.gov.homeoffice/mercury
-```
+``` 
 
 SBT - Revolver (keep things going while developing/testing)
 -----------------------------------------------------------

@@ -13,6 +13,7 @@ val `akka-version` = "2.4.16"
 val `akka-http-version` = "10.0.3"
 val `play-version` = "2.5.12"
 val `scalactic-version` = "3.0.1"
+val `ammonite-version` = "0.8.2"
 val `akka-scala-lib-version` = "2.1.11"
 val `aws-scala-lib-version` = "1.1.9"
 val `io-scala-lib-version` = "1.9.10"
@@ -29,7 +30,8 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.specs2" %% "specs2-core" % "3.8.6" % Test,
+  "com.lihaoyi" % "ammonite" % `ammonite-version` % Test cross CrossVersion.full,
+  "org.specs2" %% "specs2-core" % "3.8.6" % Test withSources(),
   "org.scalatest" %% "scalatest" % `scalactic-version` % Test withSources(),
   "com.typesafe.akka" %% "akka-testkit" % `akka-version` % Test withSources(),
   "com.typesafe.akka" %% "akka-http-testkit" % `akka-http-version` % Test withSources(),

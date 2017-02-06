@@ -106,7 +106,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
         val emailFilePart = FilePart("email", "email.txt", Some(`text/plain`), email)
 
         val numberOfFileParts = if (fileParts.size == 1) "1 attachment" else s"${fileParts.size} attachments"
-        info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, email which starts with "${m.content.substring(0, 20)}" with $numberOfFileParts""")
+        info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, an email with $numberOfFileParts""")
 
         webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(emailFilePart) ++ fileParts) flatMap { response =>
           response.status match {
