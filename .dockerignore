@@ -4,4 +4,8 @@
 bin
 libexec
 project/project
-target
+target/docker
+target/resolution-cache
+target/specs2-reports
+target/streams
+target/test-reports
