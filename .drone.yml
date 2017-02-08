@@ -8,7 +8,7 @@ pipeline:
 
   docker-build:
     privileged: true
-    image: docker:1.11
+    image: docker:1.13
     environment:
       - DOCKER_HOST=tcp://127.0.0.1:2375
     commands:
@@ -16,9 +16,22 @@ pipeline:
     when:
       event: push
 
+  integration:
+      privileged: true
+      image: docker:1.13
+      environment:
+        - DOCKER_HOST=tcp://127.0.0.1:2375
+      commands:
+        - docker-compose up -d
+        - sleep 10
+        - docker-compose exec -T mercury sbt it:test
+        - docker-compose stop
+      when:
+        event: push
+
 services:
   dind:
-    image: docker:1.11-dind
+    image: docker:1.13-dind
     privileged: true
     command:
       - "-s"
