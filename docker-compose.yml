@@ -1,12 +1,32 @@
-mercury:
-  image: uk.gov.homeoffice/mercury
-  ports:
-    - 9100:9100
-  links:
-    - elasticmq
-  command: java -jar /app/mercury.jar
+version: "3"
 
-elasticmq:
-  image: kcomlabs/elasticmq
-  ports:
-    - 9324:9324
+services:
+  elasticmq:
+    image: kcomlabs/elasticmq
+    ports:
+      - 9324:9324
+
+  s3:
+    image: lphoward/fake-s3
+    ports:
+      - 4569:4569
+
+  hocs:
+    image: hocs-fake:0.1-SNAPSHOT
+    ports:
+      - 9000:9000
+
+  mercury:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.integration
+
+    environment:
+      WEB_SERVICES_HOCS_URI: http://hocs:9000
+
+    depends_on:
+      - elasticmq
+      - s3
+      - hocs
+
+    command: bash -c "sleep 10; sbt it:test"

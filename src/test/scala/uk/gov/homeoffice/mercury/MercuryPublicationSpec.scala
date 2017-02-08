@@ -1,6 +1,7 @@
 package uk.gov.homeoffice.mercury
 
 import java.io.File
+import scala.concurrent.duration._
 import play.api.mvc.Action
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc.MultipartFormData.FilePart
@@ -31,7 +32,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
           mercury publish createMessage("A plain text message")
         }
 
-        result must beEqualTo("caseRef").await
+        result must beEqualTo("caseRef").awaitFor(5.seconds)
       }
     }
 
@@ -45,7 +46,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
           mercury publish createMessage("A plain text message")
         }
 
-        result must throwAn[Exception](message = "401, Unauthorized").await
+        result must throwAn[Exception](message = "401, Unauthorized").awaitFor(5.seconds)
       }
     }
 
@@ -58,7 +59,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
           mercury publish createMessage("A plain text message")
         }
 
-        result must throwAn[Exception](message = "502, Bad Gateway").await
+        result must throwAn[Exception](message = "502, Bad Gateway").awaitFor(5.seconds)
       }
     }
 
@@ -77,7 +78,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
           val webService = ws
         }
 
-        mercury publish createMessage("A plain text message") must beEqualTo("caseRef").await
+        mercury publish createMessage("A plain text message") must beEqualTo("caseRef").awaitFor(5.seconds)
       }*/
     }
 
@@ -105,7 +106,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
           }
         }
 
-        result must beEqualTo("caseRef").await
+        result must beEqualTo("caseRef").awaitFor(5.seconds)
       }
     }
   }
@@ -141,7 +142,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
         } yield caseRef
       }
 
-      result must beEqualTo("caseRef").await
+      result must beEqualTo("caseRef").awaitFor(5.seconds)
     }
   }
 }

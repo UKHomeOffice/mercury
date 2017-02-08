@@ -21,10 +21,7 @@ class WebServiceSpec(implicit env: ExecutionEnv) extends Specification with WebS
 
   val emailsRoute: PartialFunction[RequestHeader, Handler] = {
     case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
-      println(s"===> ${request.rawQueryString}")
-
       request.body.files.foreach { filePart =>
-        println(s"===> ${filePart.filename}")
         filePart.ref.moveTo(new File(s"./read-${filePart.filename}"))
       }
 

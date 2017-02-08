@@ -1,4 +1,6 @@
-enablePlugins(DockerPlugin)
+enablePlugins(DockerPlugin, DockerComposePlugin)
+
+dockerImageCreationTask := docker.value
 
 dockerfile in docker := {
   // The assembly task generates a fat JAR file

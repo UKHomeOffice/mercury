@@ -14,4 +14,6 @@ addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.3")
 
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.0")
 
+addSbtPlugin("com.tapad" % "sbt-docker-compose" % "1.0.18")
+
 addSbtPlugin("com.typesafe.sbt" % "sbt-site" % "1.2.0")

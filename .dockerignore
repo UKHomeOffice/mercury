@@ -1,0 +1,7 @@
+.git
+.history
+.idea
+bin
+libexec
+project/project
+target

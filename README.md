@@ -1,6 +1,5 @@
 Mercury for Scala
 =================
-
 Application built with the following (main) technologies:
 
 - Scala
@@ -140,16 +139,22 @@ Docker
 ------
 And now for using Docker directly.
 
+Build a docker image by utilising Dockerfile:
 ```
 docker build -t mercury .
 
-We need an instance of ElasticMQ:
-docker run --name elasticmq -p 9324:9324 -e ELASTICMQ_OPTS="-Dnode-address.host=*" kcomlabs/elasticmq
+docker build -t mercury -f Dockerfile.integration .
+```
 
-We need an instance of S3
-docker run --name s3 -p 4569:4569 lphoward/fake-s3
+There is a docker-compose.yml describing all services to start up for this module to run:
+```
+docker-compose up
+```
 
-docker run --link elasticmq:elasticmq -p 9100:9100 -i uk.gov.homeoffice/mercury
+At the time of writing the docker images used for each service are:
+- kcomlabs/elasticmq to run an instance of Elasticmq, an implementation of AWS SQS.
+- lphoward/fake-s3 to run an instance of a trimmed down implementation of AWS S3.
+- hocs-fake to run an inhouse custom version of the HOCS system, with the minimal functionality faking the real system.
 ``` 
 
 SBT - Revolver (keep things going while developing/testing)

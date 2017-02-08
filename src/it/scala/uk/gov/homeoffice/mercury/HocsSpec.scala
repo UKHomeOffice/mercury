@@ -2,6 +2,7 @@ package uk.gov.homeoffice.mercury
 
 import java.io.ByteArrayInputStream
 import java.net.URL
+import scala.concurrent.duration._
 import akka.stream.scaladsl.Source
 import akka.stream.scaladsl.StreamConverters.fromInputStream
 import play.api.http.Status._
@@ -15,7 +16,12 @@ import uk.gov.homeoffice.mercury.boot.configuration.HocsCredentials
 import uk.gov.homeoffice.web.WebService
 
 /**
-  * As this spec connects to an internal system, running locally will probably require VPN.
+  * As this spec connects to an internal system, running locally may require VPN.
+  * This integration test can either run against a locally running Hocs Fake instance, or an appropriate test environment
+  * Running against some test environment would require the following environment variables set as in the following example:
+  * <pre>
+  * export WEB_SERVICES_HOCS_URI="<host>"; export WEB_SERVICES_HOCS_LOGIN_USER_NAME="<userName>"; export WEB_SERVICES_HOCS_LOGIN_PASSWORD="<password>"; sbt it:test
+  * </pre>
   * @param env ExecutionEnv For asynchronous testing
   */
 class HocsSpec(implicit env: ExecutionEnv) extends Specification with HasConfig {
@@ -46,7 +52,7 @@ class HocsSpec(implicit env: ExecutionEnv) extends Specification with HasConfig 
         case response =>
           response.status mustEqual OK
           (response.json \ "data" \ "ticket").as[String] must startWith("TICKET")
-      }.await
+      }.awaitFor(5.seconds)
     }
 
     "login and be given a login token/ticket, and then submit a file" in new Context {
@@ -58,8 +64,11 @@ class HocsSpec(implicit env: ExecutionEnv) extends Specification with HasConfig 
 
         webService endpoint "/alfresco/s/homeoffice/cts/autoCreateDocument" withQueryString ("alf_ticket" -> ticket) post Source(List(emailFilePart))
       } must beLike[WSResponse] {
-        case response => response.status mustEqual OK
-      }.await
+        case response =>
+          println(response.json)
+          println(response.statusText)
+          response.status mustEqual OK
+      }.awaitFor(5.seconds)
     }
   }
 }
