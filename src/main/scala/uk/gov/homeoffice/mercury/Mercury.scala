@@ -11,7 +11,7 @@ import akka.stream.scaladsl.StreamConverters.fromInputStream
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
 import play.api.http.Status._
-import play.api.mvc.MultipartFormData.FilePart
+import play.api.mvc.MultipartFormData.{DataPart, FilePart}
 import grizzled.slf4j.Logging
 import uk.gov.homeoffice.aws.s3.{Attachment, S3}
 import uk.gov.homeoffice.aws.sqs.Message
@@ -47,7 +47,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     val fileParts = attachments map { attachment =>
       s3 pull attachment.key map { pull =>
         val data = StreamConverters.fromInputStream(() => pull.inputStream)
-        FilePart(attachment.key, attachment.fileName, Some(attachment.contentType), data) // TODO Key? Name of file? The type?
+        FilePart("file", attachment.fileName, Some(attachment.contentType), data) // TODO Key? Name of file? The type?
       }
     }
 
@@ -103,12 +103,13 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     attachments(m) flatMap { as =>
       pull(as) flatMap { fileParts =>
         val email = fromInputStream(() => new ByteArrayInputStream(m.content.getBytes))
-        val emailFilePart = FilePart("email", "email.txt", Some(`text/plain`), email)
+        val emailFilePart = FilePart("file", "email.txt", Some(`text/plain`), email) // TODO Hardcoded email file name and content type
 
         val numberOfFileParts = if (fileParts.size == 1) "1 attachment" else s"${fileParts.size} attachments"
         info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, an email with $numberOfFileParts""")
 
-        webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(emailFilePart) ++ fileParts) flatMap { response =>
+        // TODO Case type is hardcoded
+        webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "email.txt"), emailFilePart) ++ fileParts) flatMap { response =>
           response.status match {
             case OK => Future successful "caseRef" // TODO
             case _ => Future failed new Exception(s"""Failed to publish email to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")

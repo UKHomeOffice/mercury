@@ -29,7 +29,7 @@ class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with WebSe
       }
 
       pulledFiles must beLike[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] {
-        case Seq(f) => f.key mustEqual file.getName
+        case Seq(f) => f.filename mustEqual file.getName
       }.await
     }
 
@@ -46,8 +46,8 @@ class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with WebSe
 
       pulledFiles must beLike[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] {
         case Seq(f1, f2) =>
-          f1.key mustEqual file1.getName
-          f2.key mustEqual file2.getName
+          f1.filename mustEqual file1.getName
+          f2.filename mustEqual file2.getName
       }.await
     }
   }

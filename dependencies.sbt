@@ -14,9 +14,9 @@ val `akka-http-version` = "10.0.3"
 val `play-version` = "2.5.12"
 val `scalactic-version` = "3.0.1"
 val `ammonite-version` = "0.8.2"
-val `akka-scala-lib-version` = "2.1.11"
-val `aws-scala-lib-version` = "1.1.9"
-val `io-scala-lib-version` = "1.9.10"
+val `akka-scala-lib-version` = "2.1.12"
+val `aws-scala-lib-version` = "1.1.10"
+val `io-scala-lib-version` = "1.9.11"
 val `test-scala-lib-version` = "1.4.4"
 
 libraryDependencies ++= Seq(

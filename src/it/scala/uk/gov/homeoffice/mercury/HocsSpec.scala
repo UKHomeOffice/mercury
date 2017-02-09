@@ -7,7 +7,7 @@ import akka.stream.scaladsl.Source
 import akka.stream.scaladsl.StreamConverters.fromInputStream
 import play.api.http.Status._
 import play.api.libs.ws.WSResponse
-import play.api.mvc.MultipartFormData.FilePart
+import play.api.mvc.MultipartFormData.{DataPart, FilePart}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
@@ -60,9 +60,9 @@ class HocsSpec(implicit env: ExecutionEnv) extends Specification with HasConfig 
         val ticket = (response.json \ "data" \ "ticket").as[String]
 
         val email = fromInputStream(() => new ByteArrayInputStream("Blah blah blah blah".getBytes))
-        val emailFilePart = FilePart("email", "email.txt", Some("text/plain"), email)
+        val emailFilePart = FilePart("file", "email.txt", Some("text/plain"), email)
 
-        webService endpoint "/alfresco/s/homeoffice/cts/autoCreateDocument" withQueryString ("alf_ticket" -> ticket) post Source(List(emailFilePart))
+        webService endpoint "/alfresco/s/homeoffice/cts/autoCreateDocument" withQueryString ("alf_ticket" -> ticket) post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "An Email"), emailFilePart))
       } must beLike[WSResponse] {
         case response =>
           println(response.json)

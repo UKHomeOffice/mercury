@@ -23,7 +23,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
       routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
           // Expect one file of type text/plain
-          val Seq(FilePart("email", "email.txt", Some(`text/plain`), _)) = request.body.files
+          val Seq(FilePart("file", "email.txt", Some(`text/plain`), _)) = request.body.files
           Ok
         }
       }) { implicit ws =>
@@ -89,8 +89,8 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
       routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
           // Expect one file of type text/plain and a second (attachment) of type text/plain
-          val Seq(FilePart("email", "email.txt", Some(`text/plain`), emailFile),
-          FilePart(`file-name`, `file-name`, Some(`text/plain`), attachmentFile)) = request.body.files
+          val Seq(FilePart("file", "email.txt", Some(`text/plain`), emailFile),
+          FilePart("file", `file-name`, Some(`text/plain`), attachmentFile)) = request.body.files
           Ok
         }
       }) { implicit ws =>
@@ -121,9 +121,9 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
     routes(authorizeRoute orElse authorizeCheck orElse {
       case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
         // Expect one file of type text/plain, a second (attachment) of type text/plain and third (attachment) of type text/plain
-        val Seq(FilePart("email", "email.txt", Some(`text/plain`), _),
-        FilePart(`file-name-1`, `file-name-1`, Some(`text/plain`), _),
-        FilePart(`file-name-2`, `file-name-2`, Some(`text/plain`), _)) = request.body.files
+        val Seq(FilePart("file", "email.txt", Some(`text/plain`), _),
+        FilePart("file", `file-name-1`, Some(`text/plain`), _),
+        FilePart("file", `file-name-2`, Some(`text/plain`), _)) = request.body.files
         Ok
       }
     }) { implicit ws =>
