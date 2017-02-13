@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  elasticmq:
+  sqs:
     image: kcomlabs/elasticmq
     ports:
       - 9324:9324
@@ -25,7 +25,7 @@ services:
       WEB_SERVICES_HOCS_URI: http://hocs:9000
 
     depends_on:
-      - elasticmq
+      - sqs
       - s3
       - hocs
 

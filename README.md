@@ -142,6 +142,8 @@ And now for using Docker directly.
 Build a docker image by utilising Dockerfile:
 ```
 docker build -t mercury .
+
+docker build -t mercury -f Dockerfile.integration .
 ```
 
 There is a docker-compose.yml describing all services to start up for this module to run:
