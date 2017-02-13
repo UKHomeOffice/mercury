@@ -26,7 +26,7 @@ pipeline:
         - sleep 10
         - docker-compose exec -T mercury sbt it:test
         - docker-compose stop
-        - sleep 30
+        - sleep 10
         - docker-compose kill
       when:
         event: push
