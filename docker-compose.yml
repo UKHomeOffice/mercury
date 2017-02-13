@@ -12,7 +12,7 @@ services:
       - 4569:4569
 
   hocs:
-    image: hocs-fake:0.1-SNAPSHOT
+    image: davidainslie/hocs-fake
     ports:
       - 9000:9000
 
