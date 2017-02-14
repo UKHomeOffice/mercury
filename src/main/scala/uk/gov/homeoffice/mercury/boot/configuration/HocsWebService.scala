@@ -8,16 +8,18 @@ import uk.gov.homeoffice.configuration.HasConfig
 import uk.gov.homeoffice.web.WebService
 
 object HocsWebService extends HasConfig {
-  val webServiceHost = new URL(config.getString("web-services.hocs.uri"))
+  def apply() = {
+    val webServiceHost = new URL(config.getString("web-services.hocs.uri"))
 
-  implicit val system = ActorSystem()
-  implicit val materializer = ActorMaterializer()
-  val wsClient = AhcWSClient()
+    implicit val system = ActorSystem()
+    implicit val materializer = ActorMaterializer()
+    val wsClient = AhcWSClient()
 
-  sys addShutdownHook {
-    system.terminate()
-    wsClient.close()
+    sys addShutdownHook {
+      system.terminate()
+      wsClient.close()
+    }
+
+    new WebService(webServiceHost, wsClient)
   }
-
-  def apply() = new WebService(webServiceHost, wsClient)
 }

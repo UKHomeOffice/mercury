@@ -1,7 +1,6 @@
 package uk.gov.homeoffice.mercury
 
 import java.io.ByteArrayInputStream
-import java.net.URL
 import scala.concurrent.duration._
 import akka.stream.scaladsl.Source
 import akka.stream.scaladsl.StreamConverters.fromInputStream
@@ -11,9 +10,7 @@ import play.api.mvc.MultipartFormData.{DataPart, FilePart}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
-import uk.gov.homeoffice.configuration.HasConfig
-import uk.gov.homeoffice.mercury.boot.configuration.HocsCredentials
-import uk.gov.homeoffice.web.WebService
+import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService}
 
 /**
   * As this spec connects to an internal system, running locally may require VPN.
@@ -21,12 +18,14 @@ import uk.gov.homeoffice.web.WebService
   * Running against some test environment would require the following environment variables set as in the following example:
   * <pre>
   * export WEB_SERVICES_HOCS_URI="<host>"; export WEB_SERVICES_HOCS_LOGIN_USER_NAME="<userName>"; export WEB_SERVICES_HOCS_LOGIN_PASSWORD="<password>"; sbt it:test
+  * OR
+  * sbt -DWEB_SERVICES_HOCS_URI=<host> -DWEB_SERVICES_HOCS_LOGIN_USER_NAME=<userName> -DWEB_SERVICES_HOCS_LOGIN_PASSWORD=<password> "it:test"
   * </pre>
   * @param env ExecutionEnv For asynchronous testing
   */
-class HocsSpec(implicit env: ExecutionEnv) extends Specification with HasConfig {
+class HocsSpec(implicit env: ExecutionEnv) extends Specification {
   trait Context extends Scope {
-    val webService = WebService(new URL(config.getString("web-services.hocs.uri")))
+    val webService = HocsWebService()
   }
 
   "Hocs client" should {
@@ -57,6 +56,7 @@ class HocsSpec(implicit env: ExecutionEnv) extends Specification with HasConfig 
 
     "login and be given a login token/ticket, and then submit a file" in new Context {
       webService endpoint "/alfresco/s/api/login" post HocsCredentials() flatMap { response =>
+        response.status mustEqual OK
         val ticket = (response.json \ "data" \ "ticket").as[String]
 
         val email = fromInputStream(() => new ByteArrayInputStream("Blah blah blah blah".getBytes))
