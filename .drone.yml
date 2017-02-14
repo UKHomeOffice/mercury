@@ -42,6 +42,18 @@ pipeline:
     when:
       event: push
 
+  image_to_quay:
+    image: docker:1.13
+    environment:
+      - DOCKER_HOST=tcp://127.0.0.1:2375
+    commands:
+      - docker login -u="ukhomeofficedigital+drone" -p=${DOCKER_PASSWORD} quay.io
+      - docker tag mercury quay.io/ukhomeofficedigital/mercury:${DRONE_BUILD_NUMBER}
+      - docker push quay.io/ukhomeofficedigital/mercury:${DRONE_BUILD_NUMBER}
+    when:
+      event: push
+      branch: master
+
 services:
   dind:
     image: docker:1.13-dind
