@@ -1,13 +1,24 @@
 pipeline:
+  drone_s3_cache_pull:
+     image: quay.io/ukhomeofficedigital/drone-s3cache:v0.1.0
+     drone_s3_cache_mode: "pull"
+
   build:
-    image: hseeberger/scala-sbt
     commands:
-      - sbt assembly
+       - "/root/entrypoint.sh 'sbt clean assembly'"
+    image: quay.io/ukhomeofficedigital/scala-sbt:v0.2.1
     when:
-      event: push
+      event:
+        - push
+        - pull_request
+
+  drone_s3_cache_push:
+    image: quay.io/ukhomeofficedigital/drone-s3cache:v0.1.0
+    drone_s3_cache_folders:
+      - .ivy2
+    drone_s3_cache_mode: "push"
 
   docker-build:
-    privileged: true
     image: docker:1.13
     environment:
       - DOCKER_HOST=tcp://127.0.0.1:2375
@@ -17,19 +28,19 @@ pipeline:
       event: push
 
   integration:
-      privileged: true
-      image: docker/compose:1.10.1
-      environment:
-        - DOCKER_HOST=tcp://127.0.0.1:2375
-      commands:
-        - docker-compose up -d
-        - sleep 10
-        - docker-compose exec -T mercury sbt it:test
-        - docker-compose stop
-        - sleep 10
-        - docker-compose kill
-      when:
-        event: push
+    image: docker/compose:1.10.1
+    privileged: true
+    environment:
+      - DOCKER_HOST=tcp://127.0.0.1:2375
+    commands:
+      - docker-compose up -d
+      - sleep 10
+      - docker-compose exec -T mercury sbt it:test
+      - docker-compose stop
+      - sleep 10
+      - docker-compose kill
+    when:
+      event: push
 
 services:
   dind:
