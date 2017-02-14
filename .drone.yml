@@ -5,8 +5,8 @@ pipeline:
 
   build:
     commands:
-       - "/root/entrypoint.sh 'sbt clean assembly'"
-    image: quay.io/ukhomeofficedigital/scala-sbt:v0.2.1
+       - sbt clean assembly
+    image: hseeberger/scala-sbt
     when:
       event:
         - push
