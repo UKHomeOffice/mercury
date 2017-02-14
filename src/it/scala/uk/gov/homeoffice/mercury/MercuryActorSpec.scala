@@ -15,7 +15,7 @@ import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebSer
 
 class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with ActorSystemSpecification with HasConfig with Mockito {
   trait Context extends ActorSystemContext with ActorExpectations {
-    implicit val listeners = Seq(testActor)
+    /*implicit val listeners = Seq(testActor)
 
     val sqs = Try {
       SQS()
@@ -44,11 +44,13 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
       sqs.map(_.sqsClient.shutdown())
       s3.map(_.s3Client.shutdown())
       hocsWebService.map(_.wsClient.close())
-    }
+    }*/
   }
 
   "Mercury" should {
     "consume SQS message, acquire its associated file and stream these to HOCS" in new Context {
+      pending
+
       // s3 push TODO
       //val sendMessageRequest = new SendMessageRequest(sqs.queue.queueName, "Test Message")
 
