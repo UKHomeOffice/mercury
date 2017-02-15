@@ -48,6 +48,7 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
 
         mercury publish m map { caseRef => // TODO Is it just "caseRef"???
           client ! caseRef
+          delete(m)
         }
     }
   }

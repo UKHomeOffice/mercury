@@ -1,5 +1,0 @@
-FROM hseeberger/scala-sbt
-
-COPY . .
-
-RUN sbt assembly

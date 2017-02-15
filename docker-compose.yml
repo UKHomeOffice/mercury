@@ -19,10 +19,9 @@ services:
   mercury:
     build:
       context: .
-      dockerfile: ./Dockerfile.integration
 
     environment:
-      AWS_SQS_URI: http://sqs:9324
+      AWS_SQS_URI: http://sqs:9324/queue
       AWS_S3_URI: http://s3:4569
       WEB_SERVICES_HOCS_URI: http://hocs:9000
 

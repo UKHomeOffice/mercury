@@ -142,13 +142,23 @@ And now for using Docker directly.
 Build a docker image by utilising Dockerfile:
 ```
 docker build -t mercury .
-
-docker build -t mercury -f Dockerfile.integration .
 ```
+
+To run:
+```
+docker run --name mercury -it mercury
+```
+
+However, as Mercury depends on other services, instead use docker-compose, as described next.
 
 There is a docker-compose.yml describing all services to start up for this module to run:
 ```
 docker-compose up
+```
+
+Once all services are up (locally) try posting a message to SQS:
+```
+curl -k  -L -X POST -H 'Content-Type: application/x-www-form-urlencoded' -d 'Action=SendMessage&MessageBody=Ye%20Baby&AWSAccessKeyId=x&AWSSecretAccessKey=x' 'http://localhost:9324/queue/mercury'
 ```
 
 At the time of writing the docker images used for each service are:
