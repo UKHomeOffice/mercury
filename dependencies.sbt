@@ -9,37 +9,39 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("findify", "maven")
 )
 
-val `akka-version` = "2.4.16"
+transitiveClassifiers := Seq("sources")
+
+val `akka-version` = "2.4.17"
 val `akka-http-version` = "10.0.3"
 val `play-version` = "2.5.12"
 val `scalactic-version` = "3.0.1"
 val `ammonite-version` = "0.8.2"
-val `akka-scala-lib-version` = "2.1.12"
-val `aws-scala-lib-version` = "1.1.11"
-val `io-scala-lib-version` = "1.9.11"
+val `akka-scala-lib-version` = "2.1.13"
+val `aws-scala-lib-version` = "1.1.12"
+val `io-scala-lib-version` = "1.9.12"
 val `test-scala-lib-version` = "1.4.4"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % `akka-version` withSources(),
-  "com.typesafe.akka" %% "akka-http" % `akka-http-version` withSources(),
-  "org.scalactic" %% "scalactic" % `scalactic-version` withSources(),
-  "com.softwaremill.quicklens" %% "quicklens" % "1.4.8" withSources(),
-  "com.github.UKHomeOffice" %% "akka-scala-lib" % `akka-scala-lib-version` withSources(),
-  "com.github.UKHomeOffice" %% "aws-scala-lib" % `aws-scala-lib-version` withSources(),
-  "com.github.UKHomeOffice" %% "io-scala-lib" % `io-scala-lib-version` withSources()
+  "com.typesafe.akka" %% "akka-actor" % `akka-version`,
+  "com.typesafe.akka" %% "akka-http" % `akka-http-version`,
+  "org.scalactic" %% "scalactic" % `scalactic-version`,
+  "com.softwaremill.quicklens" %% "quicklens" % "1.4.8",
+  "com.github.UKHomeOffice" %% "akka-scala-lib" % `akka-scala-lib-version`,
+  "com.github.UKHomeOffice" %% "aws-scala-lib" % `aws-scala-lib-version`,
+  "com.github.UKHomeOffice" %% "io-scala-lib" % `io-scala-lib-version`
 )
 
 libraryDependencies ++= Seq(
   "com.lihaoyi" % "ammonite" % `ammonite-version` % Test cross CrossVersion.full,
-  "org.specs2" %% "specs2-core" % "3.8.6" % Test withSources(),
-  "org.scalatest" %% "scalatest" % `scalactic-version` % Test withSources(),
-  "com.typesafe.akka" %% "akka-testkit" % `akka-version` % Test withSources(),
-  "com.typesafe.akka" %% "akka-http-testkit" % `akka-http-version` % Test withSources(),
-  "com.typesafe.play" %% "play-server" % `play-version` % Test withSources(),
-  "com.typesafe.play" %% "play-test" % `play-version` % Test withSources(),
-  "io.findify" %% "s3mock" % "0.1.6" % Test withSources(),
-  "com.github.UKHomeOffice" %% "akka-scala-lib" % `akka-scala-lib-version` % Test classifier "tests" withSources(),
-  "com.github.UKHomeOffice" %% "aws-scala-lib" % `aws-scala-lib-version` % Test classifier "tests" withSources(),
-  "com.github.UKHomeOffice" %% "io-scala-lib" % `io-scala-lib-version` % Test classifier "tests" withSources(),
-  "com.github.UKHomeOffice" %% "test-scala-lib" % `test-scala-lib-version` % Test classifier "tests" withSources()
+  "org.specs2" %% "specs2-core" % "3.8.6" % Test,
+  "org.scalatest" %% "scalatest" % `scalactic-version` % Test,
+  "com.typesafe.akka" %% "akka-testkit" % `akka-version` % Test,
+  "com.typesafe.akka" %% "akka-http-testkit" % `akka-http-version` % Test,
+  "com.typesafe.play" %% "play-server" % `play-version` % Test,
+  "com.typesafe.play" %% "play-test" % `play-version` % Test,
+  "io.findify" %% "s3mock" % "0.1.6" % Test,
+  "com.github.UKHomeOffice" %% "akka-scala-lib" % `akka-scala-lib-version` % Test classifier "tests",
+  "com.github.UKHomeOffice" %% "aws-scala-lib" % `aws-scala-lib-version` % Test classifier "tests",
+  "com.github.UKHomeOffice" %% "io-scala-lib" % `io-scala-lib-version` % Test classifier "tests",
+  "com.github.UKHomeOffice" %% "test-scala-lib" % `test-scala-lib-version` % Test classifier "tests"
 )
