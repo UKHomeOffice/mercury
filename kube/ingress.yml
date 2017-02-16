@@ -1,15 +1,33 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
-
 metadata:
-  name: mercury-ingress
-
+  annotations:
+    kubernetes.io/tls-acme: "true"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/whitelist-source-range:
+      "10.98.0.0/16,\
+      80.169.158.34/32,\
+      62.25.109.196/32,\
+      80.193.85.91/32,\
+      52.48.127.150/31,\
+      52.48.127.152/31,\
+      213.251.23.164/32,\
+      194.168.223.139/32,\
+      37.26.92.98/31,\
+      37.26.92.100/31,\
+      37.26.92.102/32"
+  name: mercury
+  namespace: hocs-{{.ENVIRONMENT}}
 spec:
   rules:
-  - http:
+  - host: mercury-{{.ENVIRONMENT}}.notprod.homeoffice.gov.uk
+    http:
       paths:
       - backend:
-          serviceName: mercury-service
+          serviceName: mercury
           servicePort: 443
-
         path: /
+  tls:
+  - hosts:
+    - mercury-{{.ENVIRONMENT}}.notprod.homeoffice.gov.uk
+    secretName: letsencrypt-tls-mercury
