@@ -42,6 +42,8 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
   def authorized(webService: WebService with Authorization): Receive = {
     val mercury = Mercury(s3, webService)
 
+    listeners foreach { _ ! Authorized }
+
     {
       case m: Message =>
         val client = sender()
@@ -55,3 +57,5 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
 }
 
 case object AuthorizeMercury
+
+case object Authorized
