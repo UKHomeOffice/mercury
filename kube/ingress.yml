@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+
+metadata:
+  name: mercury-ingress
+
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: mercury-service
+          servicePort: 9100
+
+        path: /

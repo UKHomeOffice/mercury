@@ -32,7 +32,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
           mercury publish createMessage("A plain text message")
         }
 
-        result must beEqualTo("caseRef").awaitFor(5.seconds)
+        result must beEqualTo("caseRef").awaitFor(30.seconds)
       }
     }
 
@@ -46,7 +46,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
           mercury publish createMessage("A plain text message")
         }
 
-        result must throwAn[Exception](message = "401, Unauthorized").awaitFor(5.seconds)
+        result must throwAn[Exception](message = "401, Unauthorized").awaitFor(30.seconds)
       }
     }
 
@@ -59,7 +59,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
           mercury publish createMessage("A plain text message")
         }
 
-        result must throwAn[Exception](message = "502, Bad Gateway").awaitFor(5.seconds)
+        result must throwAn[Exception](message = "502, Bad Gateway").awaitFor(30.seconds)
       }
     }
 
@@ -106,7 +106,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
           }
         }
 
-        result must beEqualTo("caseRef").awaitFor(5.seconds)
+        result must beEqualTo("caseRef").awaitFor(30.seconds)
       }
     }
   }
@@ -142,7 +142,7 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
         } yield caseRef
       }
 
-      result must beEqualTo("caseRef").awaitFor(5.seconds)
+      result must beEqualTo("caseRef").awaitFor(30.seconds)
     }
   }
 }
