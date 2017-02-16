@@ -1,21 +1,93 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
-
 metadata:
+  labels:
+    app: mercury
   name: mercury
-
 spec:
-  replicas: 1
-
+  replicas: {{.REPLICAS}}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      name: mercury
   template:
     metadata:
       labels:
         name: mercury
-
+        app: mercury
     spec:
       containers:
       - name: mercury
-        image: mercury:latest
-        imagePullPolicy: IfNotPresent
+        image: quay.io/ukhomeofficedigital/mercury:{{.DRONE_COMMIT_SHA}}
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: 2Gi
         ports:
-          - containerPort: 9100
+        - containerPort: 9100
+      - name: tls
+        image: quay.io/ukhomeofficedigital/nginx-proxy:v1.7.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        env:
+        - name: PROXY_SERVICE_HOST
+          value: 127.0.0.1
+        - name: PROXY_SERVICE_PORT
+          value: "9100"
+        - name: ENABLE_UUID_PARAM
+          value: "FALSE"
+        - name: NAXSI_USE_DEFAULT_RULES
+          value: "FALSE"
+        - name: ERROR_REDIRECT_CODES
+          value: "599"
+        - name: ADD_NGINX_SERVER_CFG
+          value: |
+            add_header Cache-Control private;
+            add_header X-Frame-Options "SAMEORIGIN" always;
+            add_header X-Content-Type-Options "nosniff" always;
+            add_header X-XSS-Protection "1; mode=block" always;
+        - name: SERVER_CERT
+          value: /etc/secrets/tls-bundle.pem
+        - name: SERVER_KEY
+          value: /etc/secrets/tls-key.pem
+        volumeMounts:
+          - name: certs
+            mountPath: /etc/secrets
+            readOnly: true
+      - name: vault-side-kick
+        image: quay.io/ukhomeofficedigital/vault-sidekick-jks:v0.2.0
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: 100m
+          requests:
+            memory: "50Mi"
+            cpu: 100m
+        args:
+          - -output=/etc/secrets
+          - -tls-skip-verify=true
+          - -cn=pki:services/$NAMESPACE/pki/issue/default:common_name=mercury.${NAMESPACE}.svc.cluster.local,file=/etc/keystore/tls,fmt=bundle
+        env:
+          - name: VAULT_ADDR
+            value: "https://vault.vault.svc.cluster.local:8200"
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: store-token
+                key: token
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        volumeMounts:
+          - mountPath: /etc/keystore
+            name: certs
+      volumes:
+        - name: certs
+          emptyDir: {}

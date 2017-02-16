@@ -10,8 +10,8 @@ metadata:
 spec:
   ports:
   - name: exposed-port
-    port: 9100
-    targetPort: 9100
+    port: 443
+    targetPort: 443
 
   selector:
     name: mercury

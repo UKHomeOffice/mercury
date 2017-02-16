@@ -48,11 +48,25 @@ pipeline:
       - DOCKER_HOST=tcp://127.0.0.1:2375
     commands:
       - docker login -u="ukhomeofficedigital+drone" -p=${DOCKER_PASSWORD} quay.io
-      - docker tag mercury quay.io/ukhomeofficedigital/mercury:${DRONE_BUILD_NUMBER}
-      - docker push quay.io/ukhomeofficedigital/mercury:${DRONE_BUILD_NUMBER}
+      - docker tag mercury quay.io/ukhomeofficedigital/mercury:${DRONE_COMMIT_SHA}
+      - docker push quay.io/ukhomeofficedigital/mercury:${DRONE_COMMIT_SHA}
     when:
       event: push
       branch: master
+
+  trigger_deploy_to_dev:
+    commands:
+      - "kd --insecure-skip-tls-verify -f kube/deployment.yml -f kube/ingress.yml -f kube/service.yml"
+    environment:
+      - REPLICAS=1
+      - KUBE_NAMESPACE=hocs-dev
+      - "KUBE_SERVER=https://kube-dev.dsp.notprod.homeoffice.gov.uk"
+      - INSECURE_SKIP_TLS_VERIFY=true
+      - ENVIRONMENT=dev
+    image: "quay.io/ukhomeofficedigital/kd:v0.2.2"
+    when:
+      branch: master
+      event: push
 
 services:
   dind:

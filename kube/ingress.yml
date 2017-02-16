@@ -10,6 +10,6 @@ spec:
       paths:
       - backend:
           serviceName: mercury-service
-          servicePort: 9100
+          servicePort: 443
 
         path: /
