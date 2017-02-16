@@ -5,7 +5,7 @@ pipeline:
 
   build:
     commands:
-       - sbt clean assembly -Dsbt.ivy2.home=.ivy2
+       - sbt clean assembly -Dsbt.ivy.home=.ivy2
     image: hseeberger/scala-sbt
     when:
       event:
