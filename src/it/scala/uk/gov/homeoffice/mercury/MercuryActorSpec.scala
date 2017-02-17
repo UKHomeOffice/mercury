@@ -1,60 +1,78 @@
 package uk.gov.homeoffice.mercury
 
+import java.io.File
 import java.util.concurrent.TimeUnit
 import scala.util.{Success, Try}
+import akka.actor.ActorRef
 import akka.testkit.TestActorRef
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.retry.PredefinedRetryPolicies
+import com.amazonaws.services.sqs.model.SendMessageRequest
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.execute.{AsResult, Result}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.{ActorExpectations, ActorSystemSpecification}
+import uk.gov.homeoffice.aws.s3.S3
+import uk.gov.homeoffice.aws.sqs.SQS
 import uk.gov.homeoffice.configuration.HasConfig
-import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService, S3, SQS}
+import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService}
+import uk.gov.homeoffice.web.WebService
+//import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService, S3, SQS}
+import uk.gov.homeoffice.aws.sqs._
 
+/**
+  * As this spec connects to an internal system, running locally may require VPN.
+  * This integration test can either run against a locally running Hocs Fake instance, or an appropriate test environment
+  * Running against some test environment would require the following environment variables set as in the following example:
+  * <pre>
+  * export WEB_SERVICES_HOCS_URI="<host>"; export WEB_SERVICES_HOCS_LOGIN_USER_NAME="<userName>"; export WEB_SERVICES_HOCS_LOGIN_PASSWORD="<password>"; sbt it:test
+  * OR
+  * sbt -DWEB_SERVICES_HOCS_URI=<host> -DWEB_SERVICES_HOCS_LOGIN_USER_NAME=<userName> -DWEB_SERVICES_HOCS_LOGIN_PASSWORD=<password> "it:test"
+  * </pre>
+  * @param env ExecutionEnv For asynchronous testing
+  */
 class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with ActorSystemSpecification with HasConfig with Mockito {
   trait Context extends ActorSystemContext with ActorExpectations {
-    /*implicit val listeners = Seq(testActor)
+    implicit val listeners = Seq(testActor)
 
-    val sqs = Try {
-      SQS()
-    }
+    var sqs: SQS = _
+    var s3: S3 = _
+    var hocsWebService: WebService = _
 
-    val s3 = Try {
-      S3(new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.NO_RETRY_POLICY))
-    }
-
-    val hocsWebService = Try {
-      HocsWebService()
-    }
-
-    val mercuryActor = (sqs, s3, hocsWebService) match {
-      case (Success(s), Success(ss), Success(h)) =>
-        system.actorOf(MercuryActor.props(s, ss, HocsCredentials(), h), name = "mercury-it-actor")
-
-      case _ =>
-        TestActorRef("blah")
-    }
-
+    var mercuryActor: ActorRef = _
 
     override def around[R: AsResult](r: => R): Result = try {
+      sqs = uk.gov.homeoffice.mercury.boot.configuration.SQS()
+      s3 = uk.gov.homeoffice.mercury.boot.configuration.S3(new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.NO_RETRY_POLICY))
+      hocsWebService = HocsWebService()
+
+      mercuryActor = system.actorOf(MercuryActor.props(sqs, s3, HocsCredentials(), hocsWebService), name = "mercury-it-actor")
+
       super.around(r)
     } finally {
-      sqs.map(_.sqsClient.shutdown())
-      s3.map(_.s3Client.shutdown())
-      hocsWebService.map(_.wsClient.close())
-    }*/
+      Try { sqs.sqsClient.shutdown() }
+      Try { s3.s3Client.shutdown() }
+      Try { hocsWebService.wsClient.close() }
+    }
   }
 
   "Mercury" should {
     "consume SQS message, acquire its associated file and stream these to HOCS" in new Context {
-      pending
-
       // s3 push TODO
-      //val sendMessageRequest = new SendMessageRequest(sqs.queue.queueName, "Test Message")
+      val file1 = new File("src/test/resources/s3/test-file.txt")
+      s3.push(file1.getName, file1)
 
-      //sqs.sqsClient.sendMessage(sendMessageRequest)
+
+      /*s3.pull(file1.getName).map { pull =>
+        println("===> Pulled file with: " + scala.io.Source.fromInputStream(pull.inputStream).mkString)
+      }*/
+
+
+      /*implicit val sqsClient = sqs.sqsClient
+
+      sqs.sqsClient.sendMessage(queueUrl(sqs.queue.queueName), "Test Message")*/
+
 
       /*eventuallyExpectMsg[String] {
         case msg: String => msg == "caseRef" // TODO

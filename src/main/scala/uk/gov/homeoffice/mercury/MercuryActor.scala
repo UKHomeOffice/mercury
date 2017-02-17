@@ -33,7 +33,7 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
           context.system.scheduler.scheduleOnce(10 seconds, self, AuthorizeMercury)
       }
 
-    case m: Message =>
+    case _: Message =>
       val warning = "Received a message but not authorized to publish it"
       warn(warning)
       sender() ! warning
@@ -44,8 +44,7 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
 
     listeners foreach { _ ! Authorized }
 
-    {
-      case m: Message =>
+    { case m: Message =>
         val client = sender()
 
         mercury publish m map { caseRef => // TODO Is it just "caseRef"???

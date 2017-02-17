@@ -4,7 +4,7 @@ import java.net.URL
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.s3.S3ClientOptions
-import uk.gov.homeoffice.aws.s3.{S3, S3Client}
+import uk.gov.homeoffice.aws.s3.S3Client
 import uk.gov.homeoffice.configuration.HasConfig
 
 object S3 extends HasConfig {
@@ -17,6 +17,6 @@ object S3 extends HasConfig {
     implicit val s3Client = new S3Client(s3Host, new BasicAWSCredentials(accessKey, secretKey))(clientConfiguration)
     s3Client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build())
 
-    new S3(config.getString("aws.s3.buckets.mercury"))
+    new uk.gov.homeoffice.aws.s3.S3(config.getString("aws.s3.buckets.mercury"))
   }
 }

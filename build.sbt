@@ -14,6 +14,8 @@ initialCommands in (Test, console) := "ammonite.Main().run()"
 
 mainClass := Some("uk.gov.homeoffice.mercury.boot.Boot")
 
+assemblyJarName in assembly := "mercury.jar"
+
 lazy val IT = config("it") extend Test
 
 lazy val root = project.in(file("."))

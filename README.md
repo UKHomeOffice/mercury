@@ -76,9 +76,9 @@ This packages up an executable JAR - Note that "assembly" will first compile and
 
 Then just run as any executable JAR, with any extra Java options for overriding configurations.
 
-For example, to use a config file (other than the default application.conf) which is located on the file system (in this case in the boot directory)
+For example, to use a config file (other than the default application.conf) which is located on the file system
 ```
-java -Dconfig.file=test-classes/my-application.conf -jar <jar name>.jar
+java -Dconfig.file=test-classes/my-application.conf -jar target/scala-2.11/mercury.jar
 ```
 
 Note that the log configuration file could also be included e.g.
@@ -97,7 +97,7 @@ And another example:
 
 running from directory of the executable JAR using a config that is within said JAR:
 ```
-java -Dconfig.resource=application.uat.conf -jar <jar name>.jar
+java -Dconfig.resource=application.uat.conf -jar target/scala-2.11/mercury.jar
 ```
 
 As a sidenote, [Ammonite](http://www.lihaoyi.com/Ammonite) is referenced in this module - to use it's powerful REPL:
@@ -174,7 +174,7 @@ SBT - Revolver (keep things going while developing/testing)
 For development, you can use ~re-start to go into "triggered restart" mode.
 Your application starts up and SBT watches for changes in your source (or resource) files.
 If a change is detected SBT recompiles the required classes and sbt-revolver automatically restarts your application. 
-When you press &lt;ENTER&gt; SBT leaves "triggered restart" and returns to the normal prompt keeping your application running.
+When you press <ENTER> SBT leaves "triggered restart" and returns to the normal prompt keeping your application running.
 
 Gatling - Performance (Integration) Testing
 -------------------------------------------
