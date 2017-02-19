@@ -60,10 +60,10 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     val KeyRegex = """(.*)\.(\d*)""".r
 
     val attachments: Message => Future[Seq[Attachment]] = { message =>
-      val attachments = message.sqsMessage.getAttributes.toMap.map { case (k, v) =>
+      val attachments = message.sqsMessage.getMessageAttributes.toMap.map { case (k, v) =>
         // Either there is 1 attachment, which has not been identified with an index (so add an index) or there is 1 or more attachments with an index
-        if (k matches KeyRegex.regex) k -> v
-        else s"$k.1" -> v
+        if (k matches KeyRegex.regex) k -> v.getStringValue
+        else s"$k.1" -> v.getStringValue
       }.groupBy { case (k, _) =>
         // Group message attributes by indexes associated with 1 or more attachments
         val KeyRegex(_, number) = k

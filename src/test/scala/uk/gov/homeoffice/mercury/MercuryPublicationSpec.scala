@@ -7,6 +7,7 @@ import play.api.mvc.BodyParsers.parse
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc.Results._
 import play.api.routing.sird._
+import com.amazonaws.services.sqs.model.MessageAttributeValue
 import com.softwaremill.quicklens._
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
@@ -99,7 +100,9 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
 
           val message = createMessage("A plain text message")
             .modify(_.sqsMessage)
-            .using(_.addAttributesEntry("key", "test-file.txt").addAttributesEntry("fileName", "test-file.txt").addAttributesEntry("contentType", `text/plain`))
+            .using(_.addMessageAttributesEntry("key", new MessageAttributeValue().withDataType("String").withStringValue("test-file.txt"))
+                    .addMessageAttributesEntry("fileName", new MessageAttributeValue().withDataType("String").withStringValue("test-file.txt"))
+                    .addMessageAttributesEntry("contentType", new MessageAttributeValue().withDataType("String").withStringValue(`text/plain`)))
 
           mercury.s3.push(file.getName, file) flatMap { _ =>
             mercury publish message
@@ -132,8 +135,12 @@ class MercuryPublicationSpec(implicit env: ExecutionEnv) extends Specification w
 
         val message = createMessage("A plain text message")
           .modify(_.sqsMessage)
-          .using(_.addAttributesEntry("key.1", "test-file-1.txt").addAttributesEntry("fileName.1", "test-file-1.txt").addAttributesEntry("contentType.1", `text/plain`)
-                  .addAttributesEntry("key.2", "test-file-2.txt").addAttributesEntry("fileName.2", "test-file-2.txt").addAttributesEntry("contentType.2", `text/plain`))
+          .using(_.addMessageAttributesEntry("key.1", new MessageAttributeValue().withDataType("String").withStringValue("test-file-1.txt"))
+                  .addMessageAttributesEntry("fileName.1", new MessageAttributeValue().withDataType("String").withStringValue("test-file-1.txt"))
+                  .addMessageAttributesEntry("contentType.1", new MessageAttributeValue().withDataType("String").withStringValue(`text/plain`))
+                  .addMessageAttributesEntry("key.2", new MessageAttributeValue().withDataType("String").withStringValue("test-file-2.txt"))
+                  .addMessageAttributesEntry("fileName.2", new MessageAttributeValue().withDataType("String").withStringValue("test-file-2.txt"))
+                  .addMessageAttributesEntry("contentType.2", new MessageAttributeValue().withDataType("String").withStringValue(`text/plain`)))
 
         for {
           _ <- mercury.s3.push(file1.getName, file1)

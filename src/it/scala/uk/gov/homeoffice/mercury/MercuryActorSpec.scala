@@ -2,12 +2,11 @@ package uk.gov.homeoffice.mercury
 
 import java.io.File
 import java.util.concurrent.TimeUnit
-import scala.util.{Success, Try}
+import scala.util.Try
 import akka.actor.ActorRef
-import akka.testkit.TestActorRef
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.retry.PredefinedRetryPolicies
-import com.amazonaws.services.sqs.model.SendMessageRequest
+import com.amazonaws.services.sqs.model.{MessageAttributeValue, SendMessageRequest}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.execute.{AsResult, Result}
 import org.specs2.mock.Mockito
@@ -18,8 +17,8 @@ import uk.gov.homeoffice.aws.sqs.SQS
 import uk.gov.homeoffice.configuration.HasConfig
 import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService}
 import uk.gov.homeoffice.web.WebService
-//import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService, S3, SQS}
 import uk.gov.homeoffice.aws.sqs._
+import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 
 /**
   * As this spec connects to an internal system, running locally may require VPN.
@@ -33,6 +32,8 @@ import uk.gov.homeoffice.aws.sqs._
   * @param env ExecutionEnv For asynchronous testing
   */
 class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with ActorSystemSpecification with HasConfig with Mockito {
+  val `text/plain`: String = akka.http.scaladsl.model.MediaTypes.`text/plain`
+
   trait Context extends ActorSystemContext with ActorExpectations {
     implicit val listeners = Seq(testActor)
 
@@ -59,20 +60,25 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
   "Mercury" should {
     "consume SQS message, acquire its associated file and stream these to HOCS" in new Context {
-      // s3 push TODO
       val file1 = new File("src/test/resources/s3/test-file.txt")
-      s3.push(file1.getName, file1)
 
+      s3.push(file1.getName, file1).map { push =>
+        println(s"===> Push: $push")
+
+        implicit val sqsClient = sqs.sqsClient
+
+        val sendMessageRequest =
+          new SendMessageRequest(queueUrl(sqs.queue.queueName), "Test Message")
+            .addMessageAttributesEntry("key", new MessageAttributeValue().withDataType("String").withStringValue(file1.getName))
+            .addMessageAttributesEntry("fileName", new MessageAttributeValue().withDataType("String").withStringValue(file1.getName))
+            .addMessageAttributesEntry("contentType", new MessageAttributeValue().withDataType("String").withStringValue(`text/plain`))
+
+        sqs.sqsClient.sendMessage(sendMessageRequest)
+      }
 
       /*s3.pull(file1.getName).map { pull =>
         println("===> Pulled file with: " + scala.io.Source.fromInputStream(pull.inputStream).mkString)
       }*/
-
-
-      /*implicit val sqsClient = sqs.sqsClient
-
-      sqs.sqsClient.sendMessage(queueUrl(sqs.queue.queueName), "Test Message")*/
-
 
       /*eventuallyExpectMsg[String] {
         case msg: String => msg == "caseRef" // TODO
