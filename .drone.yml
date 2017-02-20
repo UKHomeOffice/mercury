@@ -56,7 +56,7 @@ pipeline:
 
   trigger_deploy_to_dev:
     commands:
-      - "kd --insecure-skip-tls-verify -f kube/deployment.yml -f kube/ingress.yml -f kube/service.yml -f kube/configmaps/${KUBE_NAMESPACE}.yaml"
+      - "kd --insecure-skip-tls-verify -f kube/configmaps/${KUBE_NAMESPACE}.yaml -f kube/deployment.yml -f kube/ingress.yml -f kube/service.yml"
     environment:
       - REPLICAS=1
       - KUBE_NAMESPACE=hocs-dev
@@ -70,7 +70,7 @@ pipeline:
 
   trigger_deploy_to_dev:
     commands:
-      - "kd --insecure-skip-tls-verify -f kube/deployment.yml -f kube/ingress.yml -f kube/service.yml -f kube/configmaps/${KUBE_NAMESPACE}.yaml"
+      - "kd --insecure-skip-tls-verify -f kube/configmaps/${KUBE_NAMESPACE}.yaml -f kube/deployment.yml -f kube/ingress.yml -f kube/service.yml"
     environment:
       - REPLICAS=1
       - KUBE_NAMESPACE=hocs-qa
