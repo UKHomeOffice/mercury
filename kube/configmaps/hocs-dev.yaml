@@ -4,12 +4,8 @@ metadata:
   name: hocs
   namespace: hocs-dev
 data:
-  web.services.hocs.uri: https://dev.hocs.homeoffice.gov.uk
-  aws.sqs.uri: https://sqs.eu-west-1.amazonaws.com/449472082214
+  web.services.hocs.uri: "https://dev.hocs.homeoffice.gov.uk"
+  aws.sqs.uri: "https://sqs.eu-west-1.amazonaws.com/449472082214"
   aws.sqs.queues.mercury: hocs-dev-mercury
-  aws.s3.uri: https://s3.eu-west-1.amazonaws.com
+  aws.s3.uri: "https://s3.eu-west-1.amazonaws.com"
   aws.s3.buckets.mercury: hocs-dev-deveu-west-1
-AWS_SQS_URI
-AWS_SQS_QUEUES_MERCURY
-AWS_S3_URI
-AWS_S3_BUCKETS_MERCURY
