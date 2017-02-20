@@ -1,7 +1,7 @@
 package uk.gov.homeoffice.mercury
 
 import java.io.File
-import java.util.concurrent.TimeUnit
+import scala.concurrent.duration._
 import scala.util.Try
 import akka.actor.ActorRef
 import com.amazonaws.ClientConfiguration
@@ -13,12 +13,12 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.{ActorExpectations, ActorSystemSpecification}
 import uk.gov.homeoffice.aws.s3.S3
-import uk.gov.homeoffice.aws.sqs.SQS
+import uk.gov.homeoffice.aws.sqs.{SQS, _}
+import uk.gov.homeoffice.aws.sqs.protocol.Processed
 import uk.gov.homeoffice.configuration.HasConfig
+import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService}
 import uk.gov.homeoffice.web.WebService
-import uk.gov.homeoffice.aws.sqs._
-import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 
 /**
   * As this spec connects to an internal system, running locally may require VPN.
@@ -41,14 +41,14 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
     var s3: S3 = _
     var hocsWebService: WebService = _
 
-    var mercuryActor: ActorRef = _
+    //var mercuryActor: ActorRef = _
 
     override def around[R: AsResult](r: => R): Result = try {
       sqs = uk.gov.homeoffice.mercury.boot.configuration.SQS()
       s3 = uk.gov.homeoffice.mercury.boot.configuration.S3(new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.NO_RETRY_POLICY))
       hocsWebService = HocsWebService()
 
-      mercuryActor = system.actorOf(MercuryActor.props(sqs, s3, HocsCredentials(), hocsWebService), name = "mercury-it-actor")
+
 
       super.around(r)
     } finally {
@@ -60,11 +60,11 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
   "Mercury" should {
     "consume SQS message, acquire its associated file and stream these to HOCS" in new Context {
+      val mercuryActor = system.actorOf(MercuryActor.props(sqs, s3, HocsCredentials(), hocsWebService)(listeners), name = "mercury-it-actor")
+
       val file1 = new File("src/test/resources/s3/test-file.txt")
 
       s3.push(file1.getName, file1).map { push =>
-        println(s"===> Push: $push")
-
         implicit val sqsClient = sqs.sqsClient
 
         val sendMessageRequest =
@@ -80,11 +80,17 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
         println("===> Pulled file with: " + scala.io.Source.fromInputStream(pull.inputStream).mkString)
       }*/
 
-      /*eventuallyExpectMsg[String] {
-        case msg: String => msg == "caseRef" // TODO
+      /*expectMsgType[AuthorizeMercury.type]
+      expectMsgType[Authorized.type]
+      expectMsgType[Processed](10.seconds)*/
+
+      /*eventuallyExpectMsg[Any] {
+        case a =>
+          println(s"===> $a")
+          true
       }*/
 
-      TimeUnit.SECONDS.sleep(5)
+      /*TimeUnit.SECONDS.sleep(5)*/
 
       ok
     }
