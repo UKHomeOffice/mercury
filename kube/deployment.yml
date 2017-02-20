@@ -28,6 +28,62 @@ spec:
             memory: 2Gi
         ports:
         - containerPort: 9100
+        env:
+        - name: WEB_SERVICES_HOCS_URI
+          valueFrom:
+            configMapKeyRef:
+              name: hocs
+              key: web.services.hocs.uri
+        - name: AWS_SQS_URI
+          valueFrom:
+            configMapKeyRef:
+              name: hocs
+              key: aws.sqs.uri
+        - name: AWS_SQS_QUEUES_MERCURY
+          valueFrom:
+            configMapKeyRef:
+              name: hocs
+              key: aws.sqs.queues.mercury
+        - name: AWS_S3_URI
+          valueFrom:
+            configMapKeyRef:
+              name: hocs
+              key: aws.s3.uri
+        - name: AWS_S3_BUCKETS_MERCURY
+          valueFrom:
+            configMapKeyRef:
+              name: hocs
+              key: aws.s3.buckets.mercury
+        - name: AWS_SQS_CREDENTIALS_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws
+              key: aws.sqs.access.key
+        - name: AWS_SQS_CREDENTIALS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws
+              key: aws.sqs.secret.key
+        - name: AWS_S3_CREDENTIALS_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws
+              key: aws.s3.access.key
+        - name: AWS_S3_CREDENTIALS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws
+              key: aws.s3.secret.key
+        - name: WEB_SERVICES_HOCS_LOGIN_USER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: hocs
+              key: web.services.hocs.username
+        - name: WEB_SERVICES_HOCS_LOGIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hocs
+              key: web.services.hocs.password
       - name: tls
         image: quay.io/ukhomeofficedigital/nginx-proxy:v1.7.0
         imagePullPolicy: Always
