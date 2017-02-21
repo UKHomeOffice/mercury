@@ -74,6 +74,11 @@ spec:
             secretKeyRef:
               name: aws
               key: aws.s3.secret.key
+        - name: AWS_S3_KMS_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws
+              key: aws.s3.kms.id
         - name: WEB_SERVICES_HOCS_LOGIN_USER_NAME
           valueFrom:
             secretKeyRef:
