@@ -1,5 +1,6 @@
 package uk.gov.homeoffice.mercury
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import akka.actor.{ActorRef, Props}
@@ -34,7 +35,7 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
       }
 
     case _: Message =>
-      val warning = "Received a message but not authorized to publish it"
+      val warning = "Received a message but Mercury is not authorized to perform publication"
       warn(warning)
       sender() ! warning
   }
@@ -47,9 +48,14 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
     { case m: Message =>
         val client = sender()
 
-        mercury publish m map { caseRef => // TODO Is it just "caseRef"???
-          client ! caseRef
+        mercury.publish(m).map { publication =>
+          client ! publication.caseReference // TODO Is it just "caseRef"???
           delete(m)
+        } recoverWith {
+          case t: Throwable =>
+            client ! t.getMessage
+            delete(m)
+            Future failed t
         }
     }
   }

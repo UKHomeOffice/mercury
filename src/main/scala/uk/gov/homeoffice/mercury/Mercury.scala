@@ -1,21 +1,13 @@
 package uk.gov.homeoffice.mercury
 
-import java.io.ByteArrayInputStream
-import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import akka.http.scaladsl.model.MediaType
-import akka.http.scaladsl.model.MediaTypes._
-import akka.stream.IOResult
-import akka.stream.scaladsl.StreamConverters.fromInputStream
 import akka.stream.scaladsl.{Source, StreamConverters}
-import akka.util.ByteString
 import play.api.http.Status._
 import play.api.mvc.MultipartFormData.{DataPart, FilePart}
 import grizzled.slf4j.Logging
-import uk.gov.homeoffice.aws.s3.{Attachment, S3}
+import uk.gov.homeoffice.aws.s3._
 import uk.gov.homeoffice.aws.sqs.Message
-import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.web.WebService
 
 object Mercury {
@@ -43,79 +35,38 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
 
   lazy val authorizationParam = "alf_ticket" -> webService.token
 
-  val pull: Seq[Attachment] => Future[Iterable[FilePart[Source[ByteString, Future[IOResult]]]]] = { attachments =>
-    val fileParts = attachments map { attachment =>
-      s3 pull attachment.key map { pull =>
-        val data = StreamConverters.fromInputStream(() => pull.inputStream)
-        FilePart("file", attachment.fileName, Some(attachment.contentType), data) // TODO Key? Name of file? The type?
-      }
-    }
-
-    Future.sequence(fileParts)
-  }
-
-  // TODO - Future[String]? What do we really want to get back? Case ref, email address ...
-  val publish: Message => Future[String] = { m =>
+  val publish: Message => Future[Publication] = { m =>
     info(m)
-    val KeyRegex = """(.*)\.(\d*)""".r
 
-    val attachments: Message => Future[Seq[Attachment]] = { message =>
-      val attachments = message.sqsMessage.getMessageAttributes.toMap.map { case (k, v) =>
-        // Either there is 1 attachment, which has not been identified with an index (so add an index) or there is 1 or more attachments with an index
-        if (k matches KeyRegex.regex) k -> v.getStringValue
-        else s"$k.1" -> v.getStringValue
-      }.groupBy { case (k, _) =>
-        // Group message attributes by indexes associated with 1 or more attachments
-        val KeyRegex(_, number) = k
-        number
-      }.map { case (key, messageAttributes) =>
-        // Attachments won't actually be held in S3 with indexes (just unique keys), so we have to strip indexes out
-        key -> messageAttributes.map { case (k, v) =>
-          val KeyRegex(key, _) = k
-          key -> v
+    val folder = m.content + (if (m.content.endsWith("/")) "" else "/")
+    val FileNameRegex = s"$folder(.*)".r
+
+    s3 pullResources folder flatMap {
+      case Nil =>
+        Future failed new Exception(s"""No existing resources on S3 for given SQS event "${m.content}"""")
+
+      case resources =>
+        val numberOfFileParts = if (resources.size == 1) "1 resource" else s"${resources.size} resources"
+        info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, $numberOfFileParts associated with S3 key ${m.content}""")
+
+        val fileParts = resources map {
+          case Resource(key, inputStream, contentType, _) =>
+            val data = StreamConverters.fromInputStream(() => inputStream)
+            val FileNameRegex(fileName) = key
+            FilePart("file", fileName, Some(contentType), data) // TODO Key? Name of file? The type?
         }
-      }.toList
-       .sortBy(_._1) // Sort by keys i.e. S3 keys
-       .map { case (_, messageAttributes) =>
-        // Generate the Attachments representing what will be in S3
-        (messageAttributes.get("key"), messageAttributes.get("fileName"), messageAttributes.get("contentType")) match {
-          case (Some(key), Some(fileName), Some(contentType)) =>
-            MediaType.parse(contentType) match {
-              case Right(mediaType) =>
-                Future successful Attachment(key, fileName, mediaType)
 
-              case Left(listOfErrorInfo) =>
-                Future failed new Exception(s"""Invalid attachment with key = "$key", file name = "$fileName" because of given invalid content type = "$contentType": ${listOfErrorInfo.mkString}""")
-            }
-
-          case (key, fileName, contentType) =>
-            val k = key.fold("key = <missing>") { k => s"""key = "$k"""" }
-            val f = fileName.fold("file name = <missing>") { f => s"""file name = "$f"""" }
-            val c = contentType.fold("content type = <missing>") { c => s"""content type = "$c"""" }
-
-            Future failed new Exception(s"Invalid attachment for $k, $f, $c")
-        }
-      }
-
-      Future.sequence(attachments)
-    }
-
-    attachments(m) flatMap { as =>
-      pull(as) flatMap { fileParts =>
-        val email = fromInputStream(() => new ByteArrayInputStream(m.content.getBytes))
-        val emailFilePart = FilePart("file", "email.txt", Some(`text/plain`), email) // TODO Hardcoded email file name and content type
-
-        val numberOfFileParts = if (fileParts.size == 1) "1 attachment" else s"${fileParts.size} attachments"
-        info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, an email with $numberOfFileParts""")
-
-        // TODO Case type is hardcoded
-        webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "email.txt"), emailFilePart) ++ fileParts) flatMap { response =>
+        // TODO Case type, name are hardcoded
+        webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "email.txt")) ++ fileParts) flatMap { response =>
           response.status match {
-            case OK => Future successful "caseRef" // TODO
-            case _ => Future failed new Exception(s"""Failed to publish email to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")
+            case OK =>
+              // TODO delete "folder"
+              Future successful Publication("caseRef") // TODO
+
+            case _ =>
+              throw new Exception(s"""Failed to publish to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")
           }
         }
-      }
     }
   }
 }

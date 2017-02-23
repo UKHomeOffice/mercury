@@ -16,7 +16,7 @@ import org.specs2.mutable.Specification
 import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.web.WebServiceSpecification
 
-class WebServiceSpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification {
+class MercuryWebServiceSpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification {
   val emailsEndpoint = "/alfresco/s/homeoffice/cts/autoCreateDocument"
 
   val emailsRoute: PartialFunction[RequestHeader, Handler] = {
