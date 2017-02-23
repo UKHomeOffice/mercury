@@ -1,12 +1,11 @@
 package uk.gov.homeoffice.mercury
 
 import java.io.File
-import scala.concurrent.duration._
 import scala.util.Try
-import akka.actor.ActorRef
+import akka.actor.Props
+import akka.testkit.TestActorRef
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.retry.PredefinedRetryPolicies
-import com.amazonaws.services.sqs.model.{MessageAttributeValue, SendMessageRequest}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.execute.{AsResult, Result}
 import org.specs2.mock.Mockito
@@ -14,7 +13,6 @@ import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.{ActorExpectations, ActorSystemSpecification}
 import uk.gov.homeoffice.aws.s3.S3
 import uk.gov.homeoffice.aws.sqs.{SQS, _}
-import uk.gov.homeoffice.aws.sqs.protocol.Processed
 import uk.gov.homeoffice.configuration.HasConfig
 import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService}
@@ -35,23 +33,18 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
   val `text/plain`: String = akka.http.scaladsl.model.MediaTypes.`text/plain`
 
   trait Context extends ActorSystemContext with ActorExpectations {
-    implicit val listeners = Seq(testActor)
-
     var sqs: SQS = _
     var s3: S3 = _
     var hocsWebService: WebService = _
-
-    //var mercuryActor: ActorRef = _
 
     override def around[R: AsResult](r: => R): Result = try {
       sqs = uk.gov.homeoffice.mercury.boot.configuration.SQS()
       s3 = uk.gov.homeoffice.mercury.boot.configuration.S3(new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.NO_RETRY_POLICY))
       hocsWebService = HocsWebService()
 
-
-
       super.around(r)
     } finally {
+      // Need to close everything down (gracefully) if running in sbt interactive mode, we don't want anything hanging around.
       Try { sqs.sqsClient.shutdown() }
       Try { s3.s3Client.shutdown() }
       Try { hocsWebService.wsClient.close() }
@@ -60,39 +53,23 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
   "Mercury" should {
     "consume SQS message, acquire its associated file and stream these to HOCS" in new Context {
-      val mercuryActor = system.actorOf(MercuryActor.props(sqs, s3, HocsCredentials(), hocsWebService)(listeners), name = "mercury-it-actor")
-
-      val file1 = new File("src/test/resources/s3/test-file.txt")
-
-      s3.push(file1.getName, file1).map { push =>
-        implicit val sqsClient = sqs.sqsClient
-
-        val sendMessageRequest =
-          new SendMessageRequest(queueUrl(sqs.queue.queueName), "Test Message")
-            .addMessageAttributesEntry("key", new MessageAttributeValue().withDataType("String").withStringValue(file1.getName))
-            .addMessageAttributesEntry("fileName", new MessageAttributeValue().withDataType("String").withStringValue(file1.getName))
-            .addMessageAttributesEntry("contentType", new MessageAttributeValue().withDataType("String").withStringValue(`text/plain`))
-
-        sqs.sqsClient.sendMessage(sendMessageRequest)
+      val mercuryActor = TestActorRef {
+        Props {
+          new MercuryActor(sqs, s3, HocsCredentials(), hocsWebService)(Seq(testActor))
+        }
       }
 
-      /*s3.pull(file1.getName).map { pull =>
-        println("===> Pulled file with: " + scala.io.Source.fromInputStream(pull.inputStream).mkString)
-      }*/
+      val file = new File("src/test/resources/s3/test-file.txt")
 
-      /*expectMsgType[AuthorizeMercury.type]
-      expectMsgType[Authorized.type]
-      expectMsgType[Processed](10.seconds)*/
+      s3.push(s"folder/${file.getName}", file).map { _ =>
+        implicit val sqsClient = sqs.sqsClient
 
-      /*eventuallyExpectMsg[Any] {
-        case a =>
-          println(s"===> $a")
-          true
-      }*/
+        sqsClient.sendMessage(queueUrl(sqs.queue.queueName), "folder")
+      }
 
-      /*TimeUnit.SECONDS.sleep(5)*/
-
-      ok
+      eventuallyExpectMsg[String] {
+        case s => s == "caseRef"
+      }
     }
   }
 }

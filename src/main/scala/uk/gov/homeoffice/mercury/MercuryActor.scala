@@ -50,10 +50,12 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
 
         mercury.publish(m).map { publication =>
           client ! publication.caseReference // TODO Is it just "caseRef"???
+          listeners foreach { _ ! publication.caseReference }
           delete(m)
         } recoverWith {
           case t: Throwable =>
             client ! t.getMessage
+            listeners foreach { _ ! t.getMessage }
             delete(m)
             Future failed t
         }
