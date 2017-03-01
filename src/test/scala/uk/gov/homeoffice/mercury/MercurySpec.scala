@@ -3,39 +3,41 @@ package uk.gov.homeoffice.mercury
 import java.io.File
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
+import scala.language.postfixOps
 import play.api.mvc.Action
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc.Results._
 import play.api.routing.sird._
 import org.specs2.concurrent.ExecutionEnv
+import org.specs2.control.NoLanguageFeatures
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.web.{WebService, WebServiceSpecification}
 
-class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification with Mockito {
+class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification with Mockito with NoLanguageFeatures {
   "Mercury authorization" should {
     "fail because of missing user name" in new MercuryServicesContext {
       routes(authorizeRoute) { implicit ws =>
-        Mercury authorize Credentials("", password) must throwAn[Exception](message = "401, Unauthorized").await
+        Mercury authorize Credentials("", password) must throwAn[Exception](message = "401, Unauthorized").awaitFor(30 seconds)
       }
     }
 
     "fail because of invalid user name" in new MercuryServicesContext {
       routes(authorizeRoute) { implicit ws =>
-        Mercury authorize Credentials("wrong", password) must throwAn[Exception](message = "401, Unauthorized").await
+        Mercury authorize Credentials("wrong", password) must throwAn[Exception](message = "401, Unauthorized").awaitFor(30 seconds)
       }
     }
 
     "fail because of missing password" in new MercuryServicesContext {
       routes(authorizeRoute) { implicit ws =>
-        Mercury authorize Credentials(userName, "") must throwAn[Exception](message = "401, Unauthorized").await
+        Mercury authorize Credentials(userName, "") must throwAn[Exception](message = "401, Unauthorized").awaitFor(30 seconds)
       }
     }
 
     "fail because of invalid password" in new MercuryServicesContext {
       routes(authorizeRoute) { implicit ws =>
-        Mercury authorize Credentials(userName, "wrong") must throwAn[Exception](message = "401, Unauthorized").await
+        Mercury authorize Credentials(userName, "wrong") must throwAn[Exception](message = "401, Unauthorized").awaitFor(30 seconds)
       }
     }
 
@@ -43,7 +45,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       routes(authorizeRoute) { implicit ws =>
         Mercury authorize Credentials(userName, password) must beLike[WebService] {
           case webService: WebService with Authorization => webService.token mustEqual ticket
-        }.await
+        }.awaitFor(30 seconds)
       }
     }
   }
@@ -67,7 +69,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           publication <- mercury publish createMessage("folder")
         } yield publication
 
-        publication must beEqualTo(Publication("caseRef")).awaitFor(30.seconds)
+        publication must beEqualTo(Publication("caseRef")).awaitFor(30 seconds)
       }
     }
 
@@ -95,7 +97,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           publication <- mercury publish createMessage("folder")
         } yield publication
 
-        publication must beEqualTo(Publication("caseRef")).awaitFor(30.seconds)
+        publication must beEqualTo(Publication("caseRef")).awaitFor(30 seconds)
       }
     }
 
@@ -117,7 +119,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           publication <- mercury publish createMessage("folder")
         } yield publication
 
-        publication must throwAn[Exception](message = "401, Unauthorized").awaitFor(30.seconds)
+        publication must throwAn[Exception](message = "401, Unauthorized").awaitFor(30 seconds)
       }
     }
 
@@ -135,7 +137,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           publication <- mercury publish createMessage("folder")
         } yield publication
 
-        publication must throwAn[Exception](message = "502, Bad Gateway").awaitFor(30.seconds)
+        publication must throwAn[Exception](message = "502, Bad Gateway").awaitFor(30 seconds)
       }
     }
 
@@ -149,7 +151,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           publication <- mercury publish createMessage("folder")
         } yield publication
 
-        publication must throwAn[Exception](message = """No existing resources on S3 for given SQS event "folder"""").awaitFor(30.seconds)
+        publication must throwAn[Exception](message = """No existing resources on S3 for given SQS event "folder"""").awaitFor(30 seconds)
       }
     }
   }
