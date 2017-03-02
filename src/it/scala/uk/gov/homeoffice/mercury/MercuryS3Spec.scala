@@ -7,6 +7,7 @@ import scala.util.Try
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.retry.PredefinedRetryPolicies
 import org.specs2.concurrent.ExecutionEnv
+import org.specs2.control.NoLanguageFeatures
 import org.specs2.execute.{AsResult, Result}
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.aws.s3.{Push, S3}
@@ -24,7 +25,7 @@ import uk.gov.homeoffice.specs2.ComposableAround
   * If none of the above environment variables are provided, then everything defaults to localhost services which can be achieved by first starting up "docker-compose up" before "it:test-only *MercuryS3Spec"
   * @param env ExecutionEnv For asynchronous testing
   */
-class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification {
+class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with NoLanguageFeatures {
   trait Context extends ComposableAround {
     var s3: S3 = _
 
