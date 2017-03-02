@@ -5,12 +5,17 @@ import scala.concurrent.Future
 import akka.stream.scaladsl.{Source, StreamConverters}
 import play.api.http.Status._
 import play.api.mvc.MultipartFormData.{DataPart, FilePart}
+import org.json4s.DefaultFormats
+import org.json4s.jackson.parseJson
 import grizzled.slf4j.Logging
+import uk.gov.homeoffice.aws.s3.S3.ResourcesKey
 import uk.gov.homeoffice.aws.s3._
 import uk.gov.homeoffice.aws.sqs.Message
 import uk.gov.homeoffice.web.WebService
 
 object Mercury {
+  type Key = String
+
   val authorizationEndpoint = "/alfresco/s/api/login"
 
   val publicationEndpoint = "/alfresco/s/homeoffice/cts/autoCreateDocument"
@@ -35,38 +40,48 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
 
   lazy val authorizationParam = "alf_ticket" -> webService.token
 
-  val publish: Message => Future[Publication] = { m =>
+  val parse: Message => Key = { m =>
+    implicit val formats = DefaultFormats
+
+    ((parseJson(m.content) \ "Records")(0) \ "s3" \ "bucket" \ "object" \ "key").extract[String]
+  }
+
+  val publish: Message => Future[Seq[Publication]] = { m =>
     info(m)
 
-    val folder = m.content + (if (m.content.endsWith("/")) "" else "/")
-    val FileNameRegex = s"$folder(.*)".r
-
-    s3 pullResources folder flatMap {
-      case Nil =>
-        Future failed new Exception(s"""No existing resources on S3 for given SQS event "${m.content}"""")
-
-      case resources =>
-        val numberOfFileParts = if (resources.size == 1) "1 resource" else s"${resources.size} resources"
-        info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, $numberOfFileParts associated with S3 key ${m.content}""")
-
+    s3.pullResources(groupByTopDirectory _).flatMap { pulledResources =>
+      val publications = pulledResources.toSeq.map { case (resourcesKey, resources) =>
         val fileParts = resources map {
-          case Resource(key, inputStream, contentType, _) =>
+          case Resource(key, inputStream, contentType, _, _) =>
             val data = StreamConverters.fromInputStream(() => inputStream)
-            val FileNameRegex(fileName) = key
+            val fileName = key.substring(key.lastIndexOf("/") + 1)
             FilePart("file", fileName, Some(contentType), data) // TODO Key? Name of file? The type?
         }
 
+        val numberOfFileParts = if (resources.size == 1) "1 resource" else s"${resources.size} resources"
+        info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, $numberOfFileParts associated with S3 key $resourcesKey""")
+
         // TODO Case type, name are hardcoded
-        webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "email.txt")) ++ fileParts) flatMap { response =>
+        webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "email.txt")) ++ fileParts) map { response =>
           response.status match {
             case OK =>
               // TODO delete "folder"
-              Future successful Publication("caseRef") // TODO
+              Publication("caseRef") // TODO
 
             case _ =>
               throw new Exception(s"""Failed to publish to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")
           }
         }
+      }
+
+      Future sequence publications
+    }
+  }
+
+  def groupByTopDirectory(resources: Seq[Resource]): Map[ResourcesKey, Seq[Resource]] = resources.groupBy { resource =>
+    resource.key.indexOf("/") match {
+      case -1 => resource.key
+      case i => resource.key.take(i)
     }
   }
 }

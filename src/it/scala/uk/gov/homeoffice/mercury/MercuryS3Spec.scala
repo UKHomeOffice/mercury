@@ -38,7 +38,7 @@ class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification {
 
   "Mercury" should {
     "publish file to S3" in new Context {
-      val file = new File("src/test/resources/s3/test-file.txt")
+      val file = new File("src/it/resources/s3/test-file.txt")
 
       s3.push(file.getName, file) must beLike[Push] {
         case Push.Completed(fileName, _, _) => fileName mustEqual file.getName

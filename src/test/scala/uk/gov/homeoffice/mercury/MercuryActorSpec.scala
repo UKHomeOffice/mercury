@@ -12,14 +12,29 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.{ActorExpectations, ActorSystemSpecification}
+import uk.gov.homeoffice.aws.s3.S3.ResourcesKey
+import uk.gov.homeoffice.aws.s3.{Resource, S3}
 import uk.gov.homeoffice.aws.sqs.{Queue, SQS}
-import uk.gov.homeoffice.web.WebServiceSpecification
+import uk.gov.homeoffice.web.{WebService, WebServiceSpecification}
 
 class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with ActorSystemSpecification with WebServiceSpecification with Mockito {
+  spec =>
+
   trait Context extends ActorSystemContext with ActorExpectations with MercuryServicesContext {
     implicit val listeners = Seq(testActor)
 
     val queue = create(new Queue("test-queue"))
+  }
+
+  /**
+    * Due to an odd way the Fake S3 service works, we have to filter "groups" within Fake S3
+    * @param s3 S3
+    * @param webService WebService with Authorization
+    * @return Mercury That is authorized against relevant web service
+    */
+  def mercuryAuthorized(s3: S3, webService: WebService with Authorization) = new Mercury(s3, webService) {
+    override def groupByTopDirectory(resources: Seq[Resource]): Map[ResourcesKey, Seq[Resource]] =
+      super.groupByTopDirectory(resources).filterNot(_._1.contains("."))
   }
 
   "Mercury actor" should {
@@ -49,7 +64,9 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
       }) { webService =>
         val mercuryActor = TestActorRef {
           Props {
-            new MercuryActor(new SQS(queue), s3, credentials, webService)
+            new MercuryActor(new SQS(queue), s3, credentials, webService) {
+              override def mercuryAuthorized(s3: S3, webService: WebService with Authorization): Mercury = spec.mercuryAuthorized(s3, webService)
+            }
           }
         }
 
@@ -57,8 +74,8 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
         mercuryActor ! createMessage("blah")
 
-        eventuallyExpectMsg[String] {
-          case response => response == """No existing resources on S3 for given SQS event "blah""""
+        eventuallyExpectMsg[Seq[Publication]] {
+          case response => response == Nil
         }
       }
     }
@@ -76,7 +93,9 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
       }) { webService =>
         val mercuryActor = TestActorRef {
           Props {
-            new MercuryActor(new SQS(queue), s3, credentials, webService)
+            new MercuryActor(new SQS(queue), s3, credentials, webService) {
+              override def mercuryAuthorized(s3: S3, webService: WebService with Authorization): Mercury = spec.mercuryAuthorized(s3, webService)
+            }
           }
         }
 
@@ -86,8 +105,8 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
           mercuryActor ! createMessage("folder")
         }
 
-        eventuallyExpectMsg[String] {
-          case response => response == "caseRef"
+        eventuallyExpectMsg[Seq[Publication]] {
+          case response => response == Seq(Publication("caseRef"))
         }
       }
     }

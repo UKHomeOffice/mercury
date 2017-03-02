@@ -41,16 +41,16 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
   }
 
   def authorized(webService: WebService with Authorization): Receive = {
-    val mercury = Mercury(s3, webService)
+    val mercury = mercuryAuthorized(s3, webService)
 
     listeners foreach { _ ! Authorized }
 
     { case m: Message =>
         val client = sender()
 
-        mercury.publish(m).map { publication =>
-          client ! publication.caseReference // TODO Is it just "caseRef"???
-          listeners foreach { _ ! publication.caseReference }
+        mercury.publish(m).map { publications =>
+          client ! publications
+          listeners foreach { _ ! publications }
           delete(m)
         } recoverWith {
           case t: Throwable =>
@@ -61,6 +61,8 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
         }
     }
   }
+
+  def mercuryAuthorized(s3: S3, webService: WebService with Authorization) = Mercury(s3, webService)
 }
 
 case object AuthorizeMercury

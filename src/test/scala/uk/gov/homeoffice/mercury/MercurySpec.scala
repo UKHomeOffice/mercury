@@ -13,9 +13,22 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.control.NoLanguageFeatures
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import uk.gov.homeoffice.aws.s3.S3.ResourcesKey
+import uk.gov.homeoffice.aws.s3.{Resource, S3}
 import uk.gov.homeoffice.web.{WebService, WebServiceSpecification}
 
 class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification with Mockito with NoLanguageFeatures {
+  /**
+    * Due to an odd way the Fake S3 service works, we have to filter "groups" within Fake S3
+    * @param s3 S3
+    * @param webService WebService with Authorization
+    * @return Mercury That is authorized against relevant web service
+    */
+  def mercuryAuthorized(s3: S3, webService: WebService with Authorization) = new Mercury(s3, webService) {
+    override def groupByTopDirectory(resources: Seq[Resource]): Map[ResourcesKey, Seq[Resource]] =
+      super.groupByTopDirectory(resources).filterNot(_._1.contains("."))
+  }
+
   "Mercury authorization" should {
     "fail because of missing user name" in new MercuryServicesContext {
       routes(authorizeRoute) { implicit ws =>
@@ -62,18 +75,18 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           Ok
         }
       }) { implicit ws =>
-        val publication = for {
+        val publications = for {
           webService <- Mercury authorize credentials
-          mercury = Mercury(s3, webService)
+          mercury = mercuryAuthorized(s3, webService)
           _ <- s3.push(s"folder/$fileName", file)
           publication <- mercury publish createMessage("folder")
         } yield publication
 
-        publication must beEqualTo(Publication("caseRef")).awaitFor(30 seconds)
+        publications must beEqualTo(Seq(Publication("caseRef"))).awaitFor(30 seconds)
       }
     }
 
-    "publish two resources" in new MercuryServicesContext {
+    "publish group of two resources" in new MercuryServicesContext {
       val file1 = new File(s"$s3Directory/test-file.txt")
       val fileName1 = file1.getName
 
@@ -82,22 +95,22 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
 
       routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
-          // Expect one file of type text/plain
+          // Expect group of 2 files of type text/plain
           val Seq(FilePart("file", `fileName1`, Some("text/plain; charset=UTF-8"), _),
                   FilePart("file", `fileName2`, Some("text/plain; charset=UTF-8"), _)) = request.body.files
           Ok
         }
       }) { implicit ws =>
-        val publication = for {
+        val publications = for {
           webService <- Mercury authorize credentials
-          mercury = Mercury(s3, webService)
+          mercury = mercuryAuthorized(s3, webService)
           _ <- s3.push(s"folder/$fileName1", file1)
           _ = TimeUnit.SECONDS.sleep(1) // Let's make sure we have an ordering of resources we can assert against
           _ <- s3.push(s"folder/$fileName2", file2)
           publication <- mercury publish createMessage("folder")
         } yield publication
 
-        publication must beEqualTo(Publication("caseRef")).awaitFor(30 seconds)
+        publications must beEqualTo(Seq(Publication("caseRef"))).awaitFor(30 seconds)
       }
     }
 
@@ -110,7 +123,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       val fileName = file.getName
 
       routes(authorizeRoute orElse authorizeCheck) { implicit ws =>
-        val publication = for {
+        val publications = for {
           webService <- Mercury authorize credentials
           mercury = new Mercury(s3, webService) {
             override lazy val authorizationParam = "" -> ""
@@ -119,7 +132,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           publication <- mercury publish createMessage("folder")
         } yield publication
 
-        publication must throwAn[Exception](message = "401, Unauthorized").awaitFor(30 seconds)
+        publications must throwAn[Exception](message = "401, Unauthorized").awaitFor(30 seconds)
       }
     }
 
@@ -130,14 +143,14 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       routes(authorizeRoute orElse authorizeCheck orElse {
         case _ => Action(BadGateway)
       }) { implicit ws =>
-        val publication = for {
+        val publications = for {
           webService <- Mercury authorize credentials
-          mercury = Mercury(s3, webService)
+          mercury = mercuryAuthorized(s3, webService)
           _ <- s3.push(s"folder/$fileName", file)
           publication <- mercury publish createMessage("folder")
         } yield publication
 
-        publication must throwAn[Exception](message = "502, Bad Gateway").awaitFor(30 seconds)
+        publications must throwAn[Exception](message = "502, Bad Gateway").awaitFor(30 seconds)
       }
     }
 
@@ -145,13 +158,13 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       routes(authorizeRoute orElse authorizeCheck orElse {
         case _ => Action(Ok)
       }) { implicit ws =>
-        val publication = for {
+        val publications = for {
           webService <- Mercury authorize credentials
-          mercury = Mercury(s3, webService)
+          mercury = mercuryAuthorized(s3, webService)
           publication <- mercury publish createMessage("folder")
         } yield publication
 
-        publication must throwAn[Exception](message = """No existing resources on S3 for given SQS event "folder"""").awaitFor(30 seconds)
+        publications must beEqualTo(Nil).awaitFor(30 seconds)
       }
     }
   }
