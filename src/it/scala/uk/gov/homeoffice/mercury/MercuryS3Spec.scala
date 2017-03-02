@@ -1,6 +1,8 @@
 package uk.gov.homeoffice.mercury
 
 import java.io.File
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.util.Try
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.retry.PredefinedRetryPolicies
@@ -42,7 +44,7 @@ class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification {
 
       s3.push(file.getName, file) must beLike[Push] {
         case Push.Completed(fileName, _, _) => fileName mustEqual file.getName
-      }.await
+      }.awaitFor(30 seconds)
 
       /*s3.push(file1.getName, file1, Some(AES256("secret key"))).map { push =>
         println(s"===> $push")
