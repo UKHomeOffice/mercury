@@ -11,8 +11,7 @@ import org.specs2.execute.{AsResult, Result}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.{ActorExpectations, ActorSystemSpecification}
-import uk.gov.homeoffice.aws.s3.S3.ResourcesKey
-import uk.gov.homeoffice.aws.s3.{Resource, S3}
+import uk.gov.homeoffice.aws.s3.S3
 import uk.gov.homeoffice.aws.sqs.{SQS, _}
 import uk.gov.homeoffice.configuration.HasConfig
 import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService}
@@ -30,9 +29,7 @@ import uk.gov.homeoffice.web.WebService
   * If none of the above environment variables are provided, then everything defaults to localhost services which can be achieved by first starting up "docker-compose up" before "it:test-only *MercuryActorSpec"
   * @param env ExecutionEnv For asynchronous testing
   */
-class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with ActorSystemSpecification with HasConfig with Mockito {
-  spec =>
-
+class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with MercuryFakeS3 with ActorSystemSpecification with HasConfig with Mockito {
   trait Context extends ActorSystemContext with ActorExpectations {
     var sqs: SQS = _
     var s3: S3 = _
@@ -52,23 +49,12 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
     }
   }
 
-  /**
-    * Due to an odd way the Fake S3 service works, we have to filter "groups" within Fake S3
-    * @param s3 S3
-    * @param webService WebService with Authorization
-    * @return Mercury That is authorized against relevant web service
-    */
-  def mercuryAuthorized(s3: S3, webService: WebService with Authorization) = new Mercury(s3, webService) {
-    override def groupByTopDirectory(resources: Seq[Resource]): Map[ResourcesKey, Seq[Resource]] =
-      super.groupByTopDirectory(resources).filterNot(_._1.contains("."))
-  }
-
   "Mercury" should {
     "consume SQS message, acquire its associated file and stream these to HOCS" in new Context {
       val mercuryActor = TestActorRef {
         Props {
           new MercuryActor(sqs, s3, HocsCredentials(), hocsWebService)(Seq(testActor)) {
-            override def mercuryAuthorized(s3: S3, webService: WebService with Authorization): Mercury = spec.mercuryAuthorized(s3, webService)
+            override def mercuryAuthorized(s3: S3, webService: WebService with Authorization): Mercury = new MercuryAuthorized(s3, webService)
           }
         }
       }

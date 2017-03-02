@@ -13,22 +13,9 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.control.NoLanguageFeatures
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
-import uk.gov.homeoffice.aws.s3.S3.ResourcesKey
-import uk.gov.homeoffice.aws.s3.{Resource, S3}
 import uk.gov.homeoffice.web.{WebService, WebServiceSpecification}
 
-class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification with Mockito with NoLanguageFeatures {
-  /**
-    * Due to an odd way the Fake S3 service works, we have to filter "groups" within Fake S3
-    * @param s3 S3
-    * @param webService WebService with Authorization
-    * @return Mercury That is authorized against relevant web service
-    */
-  def mercuryAuthorized(s3: S3, webService: WebService with Authorization) = new Mercury(s3, webService) {
-    override def groupByTopDirectory(resources: Seq[Resource]): Map[ResourcesKey, Seq[Resource]] =
-      super.groupByTopDirectory(resources).filterNot(_._1.contains("."))
-  }
-
+class MercurySpec(implicit env: ExecutionEnv) extends Specification with MercuryFakeS3 with WebServiceSpecification with Mockito with NoLanguageFeatures {
   "Mercury authorization" should {
     "fail because of missing user name" in new MercuryServicesContext {
       routes(authorizeRoute) { implicit ws =>
@@ -77,7 +64,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       }) { implicit ws =>
         val publications = for {
           webService <- Mercury authorize credentials
-          mercury = mercuryAuthorized(s3, webService)
+          mercury = new MercuryAuthorized(s3, webService)
           _ <- s3.push(s"folder/$fileName", file)
           publication <- mercury publish createMessage("folder")
         } yield publication
@@ -103,7 +90,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       }) { implicit ws =>
         val publications = for {
           webService <- Mercury authorize credentials
-          mercury = mercuryAuthorized(s3, webService)
+          mercury = new MercuryAuthorized(s3, webService)
           _ <- s3.push(s"folder/$fileName1", file1)
           _ = TimeUnit.SECONDS.sleep(1) // Let's make sure we have an ordering of resources we can assert against
           _ <- s3.push(s"folder/$fileName2", file2)
@@ -145,7 +132,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       }) { implicit ws =>
         val publications = for {
           webService <- Mercury authorize credentials
-          mercury = mercuryAuthorized(s3, webService)
+          mercury = new MercuryAuthorized(s3, webService)
           _ <- s3.push(s"folder/$fileName", file)
           publication <- mercury publish createMessage("folder")
         } yield publication
@@ -160,7 +147,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       }) { implicit ws =>
         val publications = for {
           webService <- Mercury authorize credentials
-          mercury = mercuryAuthorized(s3, webService)
+          mercury = new MercuryAuthorized(s3, webService)
           publication <- mercury publish createMessage("folder")
         } yield publication
 
