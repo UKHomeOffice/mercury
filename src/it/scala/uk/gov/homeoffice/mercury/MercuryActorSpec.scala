@@ -29,17 +29,13 @@ import uk.gov.homeoffice.web.WebService
   * If none of the above environment variables are provided, then everything defaults to localhost services which can be achieved by first starting up "docker-compose up" before "it:test-only *MercuryActorSpec"
   * @param env ExecutionEnv For asynchronous testing
   */
-class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with MercuryFakeS3 with ActorSystemSpecification with HasConfig with Mockito {
+class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with ActorSystemSpecification with HasConfig with Mockito {
   trait Context extends ActorSystemContext with ActorExpectations {
-    var sqs: SQS = _
-    var s3: S3 = _
-    var hocsWebService: WebService = _
+    val sqs: SQS = uk.gov.homeoffice.mercury.boot.configuration.SQS()
+    val s3: S3 = uk.gov.homeoffice.mercury.boot.configuration.S3(new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.NO_RETRY_POLICY))
+    val hocsWebService: WebService = HocsWebService()
 
     override def around[R: AsResult](r: => R): Result = try {
-      sqs = uk.gov.homeoffice.mercury.boot.configuration.SQS()
-      s3 = uk.gov.homeoffice.mercury.boot.configuration.S3(new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.NO_RETRY_POLICY))
-      hocsWebService = HocsWebService()
-
       super.around(r)
     } finally {
       // Need to close everything down (gracefully) if running in sbt interactive mode, we don't want anything hanging around.
@@ -53,9 +49,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Me
     "consume SQS message, acquire its associated file and stream these to HOCS" in new Context {
       val mercuryActor = TestActorRef {
         Props {
-          new MercuryActor(sqs, s3, HocsCredentials(), hocsWebService)(Seq(testActor)) {
-            override def mercuryAuthorized(s3: S3, webService: WebService with Authorization): Mercury = new MercuryAuthorized(s3, webService)
-          }
+          new MercuryActor(sqs, s3, HocsCredentials(), hocsWebService)(Seq(testActor))
         }
       }
 
@@ -67,8 +61,8 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Me
         sqsClient.sendMessage(queueUrl(sqs.queue.queueName), "folder")
       }
 
-      eventuallyExpectMsg[Seq[Publication]] {
-        case s => s == Seq(Publication("caseRef"))
+      eventuallyExpectMsg[Publication] {
+        case s => s == Publication("caseRef")
       }
     }
   }

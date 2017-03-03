@@ -41,28 +41,26 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
   }
 
   def authorized(webService: WebService with Authorization): Receive = {
-    val mercury = mercuryAuthorized(s3, webService)
+    val mercury = Mercury(s3, webService)
 
     listeners foreach { _ ! Authorized }
 
-    { case m: Message =>
+    { case message: Message =>
         val client = sender()
 
-        mercury.publish(m).map { publications =>
-          client ! publications
-          listeners foreach { _ ! publications }
-          delete(m)
+        mercury publish message map { publication =>
+          client ! publication
+          listeners foreach { _ ! publication }
+          delete(message)
         } recoverWith {
           case t: Throwable =>
-            client ! t.getMessage
-            listeners foreach { _ ! t.getMessage }
-            delete(m)
+            client ! t
+            listeners foreach { _ ! t }
+            delete(message)
             Future failed t
         }
     }
   }
-
-  def mercuryAuthorized(s3: S3, webService: WebService with Authorization) = Mercury(s3, webService)
 }
 
 case object AuthorizeMercury

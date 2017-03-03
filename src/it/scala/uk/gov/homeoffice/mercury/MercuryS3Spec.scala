@@ -3,14 +3,13 @@ package uk.gov.homeoffice.mercury
 import java.io.File
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.Try
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.retry.PredefinedRetryPolicies
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.control.NoLanguageFeatures
 import org.specs2.execute.{AsResult, Result}
 import org.specs2.mutable.Specification
-import uk.gov.homeoffice.aws.s3.{Push, S3}
+import uk.gov.homeoffice.aws.s3.{KMS, Push, S3}
 import uk.gov.homeoffice.specs2.ComposableAround
 
 /**
@@ -27,15 +26,13 @@ import uk.gov.homeoffice.specs2.ComposableAround
   */
 class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with NoLanguageFeatures {
   trait Context extends ComposableAround {
-    var s3: S3 = _
+    val s3: S3 = uk.gov.homeoffice.mercury.boot.configuration.S3(new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.NO_RETRY_POLICY))
 
     override def around[R: AsResult](r: => R): Result = try {
-      s3 = uk.gov.homeoffice.mercury.boot.configuration.S3(new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.NO_RETRY_POLICY))
-
       super.around(r)
     } finally {
       // Need to close everything down (gracefully) if running in sbt interactive mode, we don't want anything hanging around.
-      Try { s3.s3Client.shutdown() }
+      s3.s3Client.shutdown()
     }
   }
 
@@ -43,13 +40,13 @@ class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with NoLan
     "publish file to S3" in new Context {
       val file = new File("src/it/resources/s3/test-file.txt")
 
-      s3.push(file.getName, file) must beLike[Push] {
+      /*s3.push(file.getName, file) must beLike[Push] {
+        case Push.Completed(fileName, _, _) => fileName mustEqual file.getName
+      }.awaitFor(30 seconds)*/
+
+      s3.push(file.getName, file, Some(KMS("3923810b-6309-47af-a49c-d55dfaab6fc3"))) must beLike[Push] {
         case Push.Completed(fileName, _, _) => fileName mustEqual file.getName
       }.awaitFor(30 seconds)
-
-      /*s3.push(file1.getName, file1, Some(AES256("secret key"))).map { push =>
-        println(s"===> $push")
-      }*/
     }
   }
 }
