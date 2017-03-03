@@ -54,7 +54,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
     "be parsed into a resource key" in new MercuryServicesContext {
       val mercury = new Mercury(mock[S3], mock[WebService with Authorization])
 
-      mercury parse mercuryEvent("my-key") mustEqual "my-key"
+      mercury parse mercuryEventMessage("my-key") mustEqual "my-key"
     }
   }
 
@@ -75,7 +75,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           webServiceAuthorized <- Mercury authorize credentials
           mercury = new Mercury(s3, webServiceAuthorized)
           _ <- s3.push(key, file)
-          publication <- mercury publish mercuryEvent(key)
+          publication <- mercury publish mercuryEventMessage(key)
         } yield publication
 
         publication must beEqualTo(Publication("caseRef")).awaitFor(30 seconds)
@@ -98,7 +98,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           webServiceAuthorized <- Mercury authorize credentials
           mercury = new Mercury(s3, webServiceAuthorized)
           _ <- s3.push(key, file)
-          publication <- mercury publish mercuryEvent(key)
+          publication <- mercury publish mercuryEventMessage(key)
         } yield publication
 
         publication must beEqualTo(Publication("caseRef")).awaitFor(30 seconds)
@@ -121,7 +121,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
             override lazy val authorizationParam = "" -> ""
           }
           _ <- s3.push(key, file)
-          publication <- mercury publish mercuryEvent(key)
+          publication <- mercury publish mercuryEventMessage(key)
         } yield publication
 
         publication must throwAn[Exception](message = "401, Unauthorized").awaitFor(30 seconds)
@@ -140,7 +140,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           webServiceAuthorized <- Mercury authorize credentials
           mercury = new Mercury(s3, webServiceAuthorized)
           _ <- s3.push(key, file)
-          publication <- mercury publish mercuryEvent(key)
+          publication <- mercury publish mercuryEventMessage(key)
         } yield publication
 
         publication must throwAn[Exception](message = "502, Bad Gateway").awaitFor(30 seconds)
@@ -154,7 +154,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
         val publication = for {
           webServiceAuthorized <- Mercury authorize credentials
           mercury = new Mercury(s3, webServiceAuthorized)
-          publication <- mercury publish mercuryEvent("non-existing-resource")
+          publication <- mercury publish mercuryEventMessage("non-existing-resource")
         } yield publication
 
         publication must throwAn[Exception](message = "The resource you requested does not exist").awaitFor(30 seconds)

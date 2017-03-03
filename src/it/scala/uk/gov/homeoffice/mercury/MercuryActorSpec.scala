@@ -6,6 +6,7 @@ import akka.actor.Props
 import akka.testkit.TestActorRef
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.retry.PredefinedRetryPolicies
+import org.json4s.jackson.JsonMethods._
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.execute.{AsResult, Result}
 import org.specs2.mock.Mockito
@@ -30,7 +31,7 @@ import uk.gov.homeoffice.web.WebService
   * @param env ExecutionEnv For asynchronous testing
   */
 class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with ActorSystemSpecification with HasConfig with Mockito {
-  trait Context extends ActorSystemContext with ActorExpectations {
+  trait Context extends ActorSystemContext with ActorExpectations with MercuryEvent {
     val sqs: SQS = uk.gov.homeoffice.mercury.boot.configuration.SQS()
     val s3: S3 = uk.gov.homeoffice.mercury.boot.configuration.S3(new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.NO_RETRY_POLICY))
     val hocsWebService: WebService = HocsWebService()
@@ -55,10 +56,10 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
       val file = new File("src/it/resources/s3/test-file.txt")
 
-      s3.push(s"folder/${file.getName}", file).map { _ =>
+      s3.push(file.getName, file).map { _ =>
         implicit val sqsClient = sqs.sqsClient
 
-        sqsClient.sendMessage(queueUrl(sqs.queue.queueName), "folder")
+        sqsClient.sendMessage(queueUrl(sqs.queue.queueName), compact(render(mercuryEvent(file.getName))))
       }
 
       eventuallyExpectMsg[Publication] {

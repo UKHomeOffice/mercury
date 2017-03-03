@@ -40,13 +40,13 @@ class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with NoLan
     "publish file to S3" in new Context {
       val file = new File("src/it/resources/s3/test-file.txt")
 
-      /*s3.push(file.getName, file) must beLike[Push] {
-        case Push.Completed(fileName, _, _) => fileName mustEqual file.getName
-      }.awaitFor(30 seconds)*/
-
-      s3.push(file.getName, file, Some(KMS("3923810b-6309-47af-a49c-d55dfaab6fc3"))) must beLike[Push] {
+      s3.push(file.getName, file) must beLike[Push] {
         case Push.Completed(fileName, _, _) => fileName mustEqual file.getName
       }.awaitFor(30 seconds)
+
+      /*s3.push(file.getName, file, Some(KMS("3923810b-6309-47af-a49c-d55dfaab6fc3"))) must beLike[Push] {
+        case Push.Completed(fileName, _, _) => fileName mustEqual file.getName
+      }.awaitFor(30 seconds)*/
     }
   }
 }

@@ -18,6 +18,10 @@ trait MercuryServicesContext extends S3ServerEmbedded with SQSServerEmbedded wit
   val credentials = Credentials(userName, password)
   val ticket = "TICKET"
 
+  val mercuryEventMessage: ResourceKey => Message = { key =>
+    createMessage(compact(render(mercuryEvent(key))))
+  }
+
   val authorizeRoute: PartialFunction[RequestHeader, Handler] = {
     case POST(p"/alfresco/s/api/login") => Action(parse.json) { implicit request =>
       (param("username"), param("password")) match {
@@ -37,17 +41,12 @@ trait MercuryServicesContext extends S3ServerEmbedded with SQSServerEmbedded wit
 }
 
 trait MercuryEvent {
-  this: SQSServerEmbedded =>
-
-  val mercuryEvent: ResourceKey => Message = { key =>
-    val event: JValue =
-      "Records" -> List(
-        "s3" ->
-          ("object" ->
-            ("key" -> key)
-          )
-      )
-
-    createMessage(compact(render(event)))
+  val mercuryEvent: ResourceKey => JValue = { key =>
+    "Records" -> List(
+      "s3" ->
+        ("object" ->
+          ("key" -> key)
+        )
+    )
   }
 }
