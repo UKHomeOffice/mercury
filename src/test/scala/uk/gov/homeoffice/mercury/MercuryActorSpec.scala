@@ -33,7 +33,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
           }
         }
 
-        mercuryActor ! mercuryEvent("resource-pending")
+        mercuryActor ! mercuryEventMessage("resource-pending")
 
         eventuallyExpectMsg[String] {
           case response => response == "Received a message but Mercury is not authorized to perform publication"
@@ -55,7 +55,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
         eventuallyExpectMsg[Authorized.type]()
 
-        mercuryActor ! mercuryEvent("no-resource")
+        mercuryActor ! mercuryEventMessage("no-resource")
 
         eventuallyExpectMsg[Throwable] {
           case throwable: Throwable => throwable.getMessage.startsWith("The resource you requested does not exist")
@@ -84,7 +84,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
         eventuallyExpectMsg[Authorized.type]()
 
         s3.push(key, file).foreach { _ =>
-          mercuryActor ! mercuryEvent(key)
+          mercuryActor ! mercuryEventMessage(key)
         }
 
         eventuallyExpectMsg[Publication] {

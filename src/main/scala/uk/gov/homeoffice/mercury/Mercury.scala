@@ -49,7 +49,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
   val publish: Message => Future[Publication] = { message =>
     info(message)
 
-    s3.pullResource(parse(message)).flatMap { resource =>
+    s3 pullResource parse(message) flatMap { resource =>
       val data = StreamConverters.fromInputStream(() => resource.inputStream)
       val fileName = resource.key.substring(resource.key.lastIndexOf("/") + 1)
       val resourceFilePart = FilePart("file", fileName, Some(resource.contentType), data) // TODO Key? Name of file? The type?
