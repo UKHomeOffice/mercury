@@ -5,14 +5,22 @@ import play.api.mvc.BodyParsers.parse
 import play.api.mvc.Results.{Ok, Unauthorized}
 import play.api.mvc.{Action, Handler, Request, RequestHeader}
 import play.api.routing.sird._
+import org.json4s.JsonDSL._
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
+import uk.gov.homeoffice.aws.s3.S3.ResourceKey
 import uk.gov.homeoffice.aws.s3.S3ServerEmbedded
-import uk.gov.homeoffice.aws.sqs.SQSServerEmbedded
+import uk.gov.homeoffice.aws.sqs.{Message, SQSServerEmbedded}
 
-trait MercuryServicesContext extends SQSServerEmbedded with S3ServerEmbedded {
+trait MercuryServicesContext extends S3ServerEmbedded with SQSServerEmbedded with MercuryEvent {
   val userName = "userName"
   val password = "password"
   val credentials = Credentials(userName, password)
   val ticket = "TICKET"
+
+  val mercuryEventMessage: ResourceKey => Message = { key =>
+    createMessage(compact(render(mercuryEvent(key))))
+  }
 
   val authorizeRoute: PartialFunction[RequestHeader, Handler] = {
     case POST(p"/alfresco/s/api/login") => Action(parse.json) { implicit request =>
@@ -30,4 +38,15 @@ trait MercuryServicesContext extends SQSServerEmbedded with S3ServerEmbedded {
   }
 
   def param(key: String)(implicit request: Request[JsValue]): Option[String] = (request.body \ key).asOpt[String]
+}
+
+trait MercuryEvent {
+  val mercuryEvent: ResourceKey => JValue = { key =>
+    "Records" -> List(
+      "s3" ->
+        ("object" ->
+          ("key" -> key)
+        )
+    )
+  }
 }
