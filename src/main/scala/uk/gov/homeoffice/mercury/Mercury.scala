@@ -60,7 +60,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
       webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "email.txt"), resourceFilePart)) map { response =>
         response.status match {
           case OK =>
-            // TODO delete "resource"
+            s3.s3Client.deleteObject(s3.bucket, resource.key)
             Publication("caseRef") // TODO
 
           case _ =>

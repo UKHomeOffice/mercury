@@ -17,7 +17,7 @@ val `play-version` = "2.5.12"
 val `scalactic-version` = "3.0.1"
 val `ammonite-version` = "0.8.2"
 val `akka-scala-lib-version` = "2.1.17"
-val `aws-scala-lib-version` = "1.1.30"
+val `aws-scala-lib-version` = "1.1.32"
 val `io-scala-lib-version` = "1.9.12"
 val `test-scala-lib-version` = "1.4.4"
 

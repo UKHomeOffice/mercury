@@ -10,9 +10,7 @@ import uk.gov.homeoffice.web.WebService
 
 object MercuryActor {
   def props(sqs: SQS, s3: S3, credentials: Credentials, webService: WebService)(implicit listeners: Seq[ActorRef] = Seq.empty[ActorRef]) = Props {
-    // TODO Do we need a CryptoFilter (if we do, then we need these "secrets")?
-    // implicit val secrets = Secrets(config.getString("amazon.sqs.encryption-key"), config.getString("amazon.sqs.signing-password"))
-    new MercuryActor(sqs, s3, credentials, webService/*, new CryptoFilter*/)
+    new MercuryActor(sqs, s3, credentials, webService)
   }
 }
 
