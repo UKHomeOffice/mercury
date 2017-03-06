@@ -40,10 +40,10 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
 
   lazy val authorizationParam = "alf_ticket" -> webService.token
 
-  val parse: Message => ResourceKey = { m =>
+  val parse: Message => ResourceKey = { message =>
     implicit val formats = DefaultFormats
 
-    ((parseJson(m.content) \ "Records")(0) \ "s3" \ "object" \ "key").extract[String]
+    ((parseJson(message.content) \ "Records")(0) \ "s3" \ "object" \ "key").extract[String]
   }
 
   val publish: Message => Future[Publication] = { message =>

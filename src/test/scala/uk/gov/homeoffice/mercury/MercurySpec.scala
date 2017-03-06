@@ -161,4 +161,67 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
       }
     }
   }
+
+  "Mercury complete event" should {
+    "parsed and processed" in new MercuryServicesContext {
+      val file = new File(s"$s3Directory/test-file.txt")
+      val fileName = file.getName
+      val key = fileName
+
+      val message = s"""
+      {
+        "Records": [{
+          "eventVersion": "2.0",
+          "eventSource": "aws:s3",
+          "awsRegion": "eu-west-2",
+          "eventTime": "2017-03-04T23:08:46.241Z",
+          "eventName": "ObjectCreated:Put",
+          "userIdentity": {
+            "principalId": "blah"
+          },
+          "requestParameters": {
+            "sourceIPAddress": "1.1.1.1"
+          },
+          "responseElements": {
+            "x-amz-request-id": "blah",
+            "x-amz-id-2": "blah"
+          },
+          "s3": {
+            "s3SchemaVersion": "1.0",
+            "configurationId": "resource-uploaded",
+            "bucket": {
+              "name": "my-bucket",
+              "ownerIdentity": {
+                "principalId": "blah"
+              },
+              "arn": "arn:aws:s3:::my-bucket"
+            },
+            "object": {
+              "key": "$key",
+              "size": 9,
+              "eTag": "blah",
+              "sequencer": "blah"
+            }
+          }
+        }]
+      }"""
+
+      routes(authorizeRoute orElse authorizeCheck orElse {
+        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
+          // Expect one file of type text/plain
+          val Seq(FilePart("file", `fileName`, Some("text/plain; charset=UTF-8"), _)) = request.body.files
+          Ok
+        }
+      }) { implicit ws =>
+        val publication = for {
+          webServiceAuthorized <- Mercury authorize credentials
+          mercury = new Mercury(s3, webServiceAuthorized)
+          _ <- s3.push(key, file)
+          publication <- mercury publish createMessage(message)
+        } yield publication
+
+        publication must beEqualTo(Publication("caseRef")).awaitFor(30 seconds)
+      }
+    }
+  }
 }
