@@ -48,6 +48,8 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
   "Mercury" should {
     "consume SQS message, acquire its associated file and stream these to HOCS" in new Context {
+      skipped("Cannot test against Fake S3 as events cannot be configured")
+
       val mercuryActor = TestActorRef {
         Props {
           new MercuryActor(sqs, s3, HocsCredentials(), hocsWebService)(Seq(testActor))

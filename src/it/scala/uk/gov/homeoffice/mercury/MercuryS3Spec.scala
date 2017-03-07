@@ -46,6 +46,8 @@ class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with NoLan
     }
 
     "publish encrypted resource to S3" in new Context {
+      skipped("Cannot test encryption against Fake S3")
+
       val file = new File("src/it/resources/s3/test-file.txt")
 
       s3.push(file.getName, file, Some(KMS("3923810b-6309-47af-a49c-d55dfaab6fc3"))) must beLike[Push] {
