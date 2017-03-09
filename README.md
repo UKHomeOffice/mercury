@@ -183,3 +183,7 @@ To execute Gatling performance integration tests from withing SBT:
 ```
 gatling-it:test
 ```
+
+Architecture/Design
+-------------------
+![Architecture](/doc/architecture.png)
