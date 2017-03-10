@@ -16,6 +16,7 @@ import uk.gov.homeoffice.aws.s3.S3
 import uk.gov.homeoffice.aws.sqs.{SQS, _}
 import uk.gov.homeoffice.configuration.HasConfig
 import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService}
+import uk.gov.homeoffice.mercury.s3.MercuryActor
 import uk.gov.homeoffice.web.WebService
 
 /**

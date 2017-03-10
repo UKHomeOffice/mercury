@@ -1,4 +1,4 @@
-package uk.gov.homeoffice.mercury
+package uk.gov.homeoffice.mercury.sqs
 
 import java.io.File
 import akka.actor.Props
@@ -13,6 +13,8 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.{ActorExpectations, ActorSystemSpecification}
 import uk.gov.homeoffice.aws.sqs.{Queue, SQS}
+import uk.gov.homeoffice.mercury.Protocol.Authorized
+import uk.gov.homeoffice.mercury.{MercuryServicesContext, Publication}
 import uk.gov.homeoffice.web.WebServiceSpecification
 
 class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with ActorSystemSpecification with WebServiceSpecification with Mockito {
