@@ -33,6 +33,11 @@ class MercuryActor(val s3: S3, credentials: Credentials, implicit val webService
           log.error(s"Failed to authorize Mercury with webservice ${webService.host} because of ${t.getMessage}")
           context.system.scheduler.scheduleOnce(10 seconds, self, AuthorizeMercury)
       }
+
+    case Publish =>
+      val warning = "Mercury was triggered but is not authorized to perform publication"
+      log.warning(warning)
+      sender() ! warning
   }
 
   def authorized(webService: WebService with Authorization): Receive = {
@@ -42,9 +47,14 @@ class MercuryActor(val s3: S3, credentials: Credentials, implicit val webService
 
     val receive: Receive = {
       case Publish =>
+        println(s"===> HERE")
+
         val client = sender()
 
         mercury.publish.map { publications =>
+
+          println(s"===> ps = ${publications}")
+
           client ! publications
           listeners foreach { _ ! publications }
           context.system.scheduler.scheduleOnce(10 seconds, self, Publish)
