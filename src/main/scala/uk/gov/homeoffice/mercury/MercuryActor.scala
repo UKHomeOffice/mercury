@@ -48,14 +48,15 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
         val client = sender()
 
         mercury publish message map { publication =>
+          delete(message)
           client ! publication
           listeners foreach { _ ! publication }
-          delete(message)
         } recoverWith {
           case t: Throwable =>
             client ! t
             listeners foreach { _ ! t }
-            delete(message)
+            context.unbecome()
+            postRestart(t)
             Future failed t
         }
     }

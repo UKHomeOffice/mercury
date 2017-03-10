@@ -47,11 +47,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
           Ok
         }
       }) { webService =>
-        val mercuryActor = TestActorRef {
-          Props {
-            new MercuryActor(new SQS(queue), s3, credentials, webService)
-          }
-        }
+        val mercuryActor = TestActorRef(Props(new MercuryActor(new SQS(queue), s3, credentials, webService)))
 
         eventuallyExpectMsg[Authorized.type]()
 
@@ -75,11 +71,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
           Ok
         }
       }) { webService =>
-        val mercuryActor = TestActorRef {
-          Props {
-            new MercuryActor(new SQS(queue), s3, credentials, webService)
-          }
-        }
+        val mercuryActor = TestActorRef(Props(new MercuryActor(new SQS(queue), s3, credentials, webService)))
 
         eventuallyExpectMsg[Authorized.type]()
 
@@ -90,6 +82,22 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
         eventuallyExpectMsg[Publication] {
           case response => response == Publication("caseRef")
         }
+      }
+    }
+
+    "restart (and so re-authorize) upon receiving an exception" in new Context {
+      routes(authorizeRoute orElse authorizeCheck orElse {
+        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { _ =>
+          BadRequest
+        }
+      }) { webService =>
+        val mercuryActor = TestActorRef(Props(new MercuryActor(new SQS(queue), s3, credentials, webService)))
+
+        eventuallyExpectMsg[Authorized.type]()
+
+        mercuryActor ! mercuryEventMessage("")
+
+        eventuallyExpectMsg[Authorized.type]()
       }
     }
   }

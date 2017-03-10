@@ -52,7 +52,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     s3 pullResource parse(message) flatMap { resource =>
       val data = StreamConverters.fromInputStream(() => resource.inputStream)
       val fileName = resource.key.substring(resource.key.lastIndexOf("/") + 1)
-      val resourceFilePart = FilePart("file", fileName, Some(resource.contentType), data) // TODO Key? Name of file? The type?
+      val resourceFilePart = FilePart("file", fileName, Some(resource.contentType), data)
 
       info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, resource with S3 key "${resource.key}"""")
 
