@@ -1,3 +1,5 @@
 package uk.gov.homeoffice.mercury
 
-case class Publication(caseReference: String) // TODO - Is this the only data?
+import org.json4s.JValue
+
+case class Publication(result: JValue)

@@ -78,7 +78,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           publication <- mercury publish mercuryEventMessage(key)
         } yield publication
 
-        publication must beEqualTo(Publication("caseRef")).awaitFor(30 seconds)
+        publication must beAnInstanceOf[Publication].awaitFor(30 seconds)
       }
     }
 
@@ -101,7 +101,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           publication <- mercury publish mercuryEventMessage(key)
         } yield publication
 
-        publication must beEqualTo(Publication("caseRef")).awaitFor(30 seconds)
+        publication must beAnInstanceOf[Publication].awaitFor(30 seconds)
       }
     }
 
@@ -220,7 +220,7 @@ class MercurySpec(implicit env: ExecutionEnv) extends Specification with WebServ
           publication <- mercury publish createMessage(message)
         } yield publication
 
-        publication must beEqualTo(Publication("caseRef")).awaitFor(30 seconds)
+        publication must beAnInstanceOf[Publication].awaitFor(30 seconds)
       }
     }
   }

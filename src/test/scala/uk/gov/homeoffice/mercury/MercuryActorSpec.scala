@@ -79,9 +79,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
           mercuryActor ! mercuryEventMessage(key)
         }
 
-        eventuallyExpectMsg[Publication] {
-          case response => response == Publication("caseRef")
-        }
+        eventuallyExpectMsg[Publication]()
       }
     }
 

@@ -13,9 +13,7 @@ import uk.gov.homeoffice.specs2.ComposableAround
   * This integration test can either run against a locally running Hocs Fake instance, or an appropriate test environment
   * Running against some test environment would require the following environment variables set as in the following example:
   * <pre>
-  * export AWS_SQS_URI="<host>"; export AWS_SQS_CREDENTIALS_ACCESS_KEY="<access-key>"; export AWS_SQS_CREDENTIALS_SECRET_KEY="<secret-key>"; sbt it:test-only *MercurySQSSpec
-  * OR
-  * sbt -DAWS_SQS_URI=<host> -DAWS_SQS_CREDENTIALS_ACCESS_KEY=<access-key> -DAWS_SQS_CREDENTIALS_SECRET_KEY=<secret-key> "it:test-only *MercurySQSSpec"
+  * sbt '; set javaOptions ++= Seq("-DAWS_SQS_URI=<host>", "-DAWS_SQS_CREDENTIALS_ACCESS_KEY=<access-key>", "-DAWS_SQS_CREDENTIALS_SECRET_KEY=<secret-key>"); it:test-only *MercurySQSSpec'
   * </pre>
   * If none of the above environment variables are provided, then everything defaults to localhost services which can be achieved by first starting up "docker-compose up" before "it:test-only *MercurySQSSpec"
   * @param env ExecutionEnv For asynchronous testing
@@ -42,9 +40,8 @@ class MercurySQSSpec(implicit env: ExecutionEnv) extends Specification {
       sqs.sqsClient.sendMessage(sendMessageRequest)
       sqs.sqsClient.sendMessage(sendMessageRequest.withMessageBody("Ye Baby 2"))
 
-      println(s"===> On queue: ${sqs.sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl(sqs.queue.queueName)).withMaxNumberOfMessages(10))}")
-
-      ok
+      val receiveMessageResult = sqs.sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl(sqs.queue.queueName)).withMaxNumberOfMessages(10))
+      receiveMessageResult.getMessages.get(0).getBody mustEqual "Ye Baby 2"
     }
   }
 }

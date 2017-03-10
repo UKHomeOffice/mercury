@@ -23,9 +23,7 @@ import uk.gov.homeoffice.web.WebService
   * This integration test can either run against a locally running Hocs Fake instance, or an appropriate test environment
   * Running against some test environment would require the following environment variables set as in the following example:
   * <pre>
-  * export WEB_SERVICES_HOCS_URI="<host>"; export WEB_SERVICES_HOCS_LOGIN_USER_NAME="<userName>"; export WEB_SERVICES_HOCS_LOGIN_PASSWORD="<password>"; sbt it:test-only *MercuryActorSpec
-  * OR
-  * sbt -DWEB_SERVICES_HOCS_URI=<host> -DWEB_SERVICES_HOCS_LOGIN_USER_NAME=<userName> -DWEB_SERVICES_HOCS_LOGIN_PASSWORD=<password> "it:test-only *MercuryActorSpec"
+  * sbt '; set javaOptions ++= Seq("-DWEB_SERVICES_HOCS_URI=<host>", "-DWEB_SERVICES_HOCS_LOGIN_USER_NAME=<userName>", "-DWEB_SERVICES_HOCS_LOGIN_PASSWORD=<password>"); it:test-only *MercuryActorSpec'
   * </pre>
   * If none of the above environment variables are provided, then everything defaults to localhost services which can be achieved by first starting up "docker-compose up" before "it:test-only *MercuryActorSpec"
   * @param env ExecutionEnv For asynchronous testing
@@ -64,9 +62,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
         sqsClient.sendMessage(queueUrl(sqs.queue.queueName), compact(render(mercuryEvent(file.getName))))
       }
 
-      eventuallyExpectMsg[Publication] {
-        case s => s == Publication("caseRef")
-      }
+      eventuallyExpectMsg[Publication]()
     }
   }
 }

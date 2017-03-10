@@ -17,9 +17,7 @@ import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebSer
   * This integration test can either run against a locally running Hocs Fake instance, or an appropriate test environment
   * Running against some test environment would require the following environment variables set as in the following example:
   * <pre>
-  * export WEB_SERVICES_HOCS_URI="<host>"; export WEB_SERVICES_HOCS_LOGIN_USER_NAME="<userName>"; export WEB_SERVICES_HOCS_LOGIN_PASSWORD="<password>"; sbt it:test
-  * OR
-  * sbt -DWEB_SERVICES_HOCS_URI=<host> -DWEB_SERVICES_HOCS_LOGIN_USER_NAME=<userName> -DWEB_SERVICES_HOCS_LOGIN_PASSWORD=<password> "it:test"
+  * sbt '; set javaOptions ++= Seq("-DWEB_SERVICES_HOCS_URI=<host>", "-DWEB_SERVICES_HOCS_LOGIN_USER_NAME=<userName>", "-DWEB_SERVICES_HOCS_LOGIN_PASSWORD=<password>"); it:test-only *HocsSpec'
   * </pre>
   * @param env ExecutionEnv For asynchronous testing
   */

@@ -3,16 +3,19 @@ package uk.gov.homeoffice.mercury
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.postfixOps
+import scala.util.Try
 import akka.stream.scaladsl.{Source, StreamConverters}
 import play.api.http.Status._
 import play.api.mvc.MultipartFormData.{DataPart, FilePart}
 import org.json4s.DefaultFormats
+import org.json4s.JsonAST.JNothing
 import org.json4s.jackson.parseJson
 import grizzled.slf4j.Logging
 import uk.gov.homeoffice.aws.s3.S3.ResourceKey
 import uk.gov.homeoffice.aws.s3._
 import uk.gov.homeoffice.aws.sqs.Message
 import uk.gov.homeoffice.configuration.HasConfig
+import uk.gov.homeoffice.json.Json._
 import uk.gov.homeoffice.web.WebService
 
 object Mercury {
@@ -61,7 +64,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
         response.status match {
           case OK =>
             s3.s3Client.deleteObject(s3.bucket, resource.key)
-            Publication("caseRef") // TODO
+            Publication(Try(response.json).map(jValue).getOrElse(JNothing))
 
           case _ =>
             throw new Exception(s"""Failed to publish to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")

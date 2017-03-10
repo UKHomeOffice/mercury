@@ -17,9 +17,7 @@ import uk.gov.homeoffice.specs2.ComposableAround
   * This integration test can either run against a locally running Hocs Fake instance, or an appropriate test environment
   * Running against some test environment would require the following environment variables set as in the following example:
   * <pre>
-  * export AWS_S3_URI="<host>"; export AWS_S3_CREDENTIALS_ACCESS_KEY="<access-key>"; export AWS_S3_CREDENTIALS_SECRET_KEY="<secret-key>"; sbt it:test-only *MercuryS3Spec
-  * OR
-  * sbt -DAWS_S3_URI=<host> -DAWS_S3_CREDENTIALS_ACCESS_KEY=<access-key> -DAWS_S3_CREDENTIALS_SECRET_KEY=<secret-key> "it:test-only *MercuryS3Spec"
+  * sbt '; set javaOptions ++= Seq("-DAWS_S3_URI=<host>", "-DAWS_S3_CREDENTIALS_ACCESS_KEY=<access-key>", "-DAWS_S3_CREDENTIALS_SECRET_KEY=<secret-key>"); it:test-only *MercuryS3Spec'
   * </pre>
   * If none of the above environment variables are provided, then everything defaults to localhost services which can be achieved by first starting up "docker-compose up" before "it:test-only *MercuryS3Spec"
   * @param env ExecutionEnv For asynchronous testing
