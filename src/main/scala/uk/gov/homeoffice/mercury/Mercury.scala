@@ -49,7 +49,12 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     ((parseJson(message.content) \ "Records")(0) \ "s3" \ "object" \ "key").extract[String]
   }
 
-  val publish: Message => Future[Publication] = { message =>
+  /**
+    * Publish a resource from S3 according to a "key" within a given Message
+    * @param message Message Containing a "key' to be used to acquire a resource from S3 and publish
+    * @return Future[Publication]
+    */
+  def publish(message: Message): Future[Publication] = {
     info(message)
 
     s3 pullResource parse(message) flatMap { resource =>
@@ -70,6 +75,45 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
             throw new Exception(s"""Failed to publish to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")
         }
       }
+    }
+  }
+
+  /**
+    * Publish all available resources on S3
+    * @return Future[Seq[Publication]
+    */
+  def publish: Future[Seq[Publication]] = {
+    info("Publishing")
+
+    s3.pullResources().flatMap { pulledResources =>
+      val publications = pulledResources.toSeq.map { case (resourcesKey, resources) =>
+        val fileParts = resources map {
+          case Resource(key, inputStream, contentType, _, _) =>
+            val data = StreamConverters.fromInputStream(() => inputStream)
+            val fileName = key.substring(key.lastIndexOf("/") + 1)
+            FilePart("file", fileName, Some(contentType), data)
+        }
+
+        val numberOfFileParts = if (resources.size == 1) "1 resource" else s"${resources.size} resources"
+        info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, $numberOfFileParts associated with S3 key $resourcesKey""")
+
+        // TODO Case type, name are hardcoded
+        webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "email.txt")) ++ fileParts) map { response =>
+          response.status match {
+            case OK =>
+              resources foreach { resource =>
+                s3.s3Client.deleteObject(s3.bucket, resource.key)
+              }
+
+              Publication(Try(response.json).map(jValue).getOrElse(JNothing))
+
+            case _ =>
+              throw new Exception(s"""Failed to publish to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")
+          }
+        }
+      }
+
+      Future sequence publications
     }
   }
 }
