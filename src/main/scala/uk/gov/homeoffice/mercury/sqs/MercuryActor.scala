@@ -10,12 +10,26 @@ import uk.gov.homeoffice.mercury.Protocol.{AuthorizeMercury, Authorized}
 import uk.gov.homeoffice.mercury._
 import uk.gov.homeoffice.web.WebService
 
+/**
+  * Companion object to create Mercury Actor that subscribes to AWS SQS events representing resources to be pulled in from AWS S3
+  */
 object MercuryActor {
   def props(sqs: SQS, s3: S3, credentials: Credentials, webService: WebService)(implicit listeners: Seq[ActorRef] = Seq.empty[ActorRef]) = Props {
     new MercuryActor(sqs, s3, credentials, webService)
   }
 }
 
+/**
+  * Actor to subscribe to AWS SQS events representing resources to be pulled in from AWS S3 and publish them to a web service endpoint exposed by HOCS.
+  * This Actor can be in one of two states:
+  * - Not (HOCS) authorized is the initial/default state
+  * - Authorized to publish resources to HOCS
+  * @param sqs SQS To subscribe for events
+  * @param s3 S3 To pull in resources from
+  * @param credentials Credentials To be validated against AWS
+  * @param webService WebService Acting as the interface to endpoints exposed by HOCS
+  * @param listeners Seq[ActorRef] Any (registered) listeners wishing to be notified of certain events
+  */
 class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val webService: WebService)(implicit listeners: Seq[ActorRef] = Seq.empty[ActorRef]) extends SQSActor(sqs) {
   implicit val ec = context.dispatcher
 
@@ -24,6 +38,10 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
     self ! AuthorizeMercury
   }
 
+  /**
+    * Initial/default state of not being (HOCS) authorized
+    * @return Receive
+    */
   override def receive: Receive = {
     case AuthorizeMercury =>
       Mercury authorize credentials map { webService =>
@@ -40,6 +58,11 @@ class MercuryActor(sqs: SQS, val s3: S3, credentials: Credentials, implicit val 
       sender() ! warning
   }
 
+  /**
+    * Authorized state where resources can be published to HOCS
+    * @param webService WebService with Authorization
+    * @return Receive
+    */
   def authorized(webService: WebService with Authorization): Receive = {
     listeners foreach { _ ! Authorized }
 

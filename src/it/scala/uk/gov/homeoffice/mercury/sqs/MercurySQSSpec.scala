@@ -1,4 +1,4 @@
-package uk.gov.homeoffice.mercury
+package uk.gov.homeoffice.mercury.sqs
 
 import scala.util.Try
 import com.amazonaws.services.sqs.model.{ReceiveMessageRequest, SendMessageRequest}

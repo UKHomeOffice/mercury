@@ -3,6 +3,7 @@ package uk.gov.homeoffice.mercury.s3
 import java.io.File
 import akka.actor.Props
 import akka.testkit.TestActorRef
+import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc.MultipartFormData.FilePart
@@ -46,39 +47,36 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
           Ok
         }
       }) { webService =>
-        val mercuryActor = TestActorRef(Props(new MercuryActor(s3, credentials, webService)))
+        TestActorRef(Props(new MercuryActor(s3, credentials, webService)))
 
         eventuallyExpectMsg[Authorized.type]()
 
-        //mercuryActor ! Publish
-
-        eventuallyExpectMsg[String] {
-          case response => response == "No existing resources on S3 for publication"
+        eventuallyExpectMsg[Seq[Publication]] {
+          case publications => publications == Nil
         }
       }
     }
 
-    /*"be triggered to publish and be notified when the associated resource has been published" in new Context {
+    "be triggered to publish and be notified when the associated resource has been published" in new Context {
       val file = new File(s"$s3Directory/test-file.txt")
       val fileName = file.getName
 
       routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
-          // Expect one file of type text/plain
-          val Seq(FilePart("file", `fileName`, Some("text/plain; charset=UTF-8"), _)) = request.body.files
-          Ok
+          // Expect one file
+          val Seq(FilePart("file", fileName, _, _)) = request.body.files
+          fileName must endWith(file.getName)
+          Ok(Json.obj("file" -> fileName))
         }
       }) { webService =>
-        val mercuryActor = TestActorRef(Props(new MercuryActor(s3, credentials, webService)))
+        TestActorRef(Props(new MercuryActor(s3, credentials, webService)))
 
         eventuallyExpectMsg[Authorized.type]()
 
-        s3.push(s"folder/$fileName", file).foreach { _ =>
-          mercuryActor ! Publish
-        }
+        s3.push(s"folder/$fileName", file)
 
         eventuallyExpectMsg[Seq[Publication]]()
       }
-    }*/
+    }
   }
 }

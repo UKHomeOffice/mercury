@@ -1,4 +1,4 @@
-package uk.gov.homeoffice.mercury
+package uk.gov.homeoffice.mercury.s3
 
 import java.io.File
 import scala.concurrent.duration._

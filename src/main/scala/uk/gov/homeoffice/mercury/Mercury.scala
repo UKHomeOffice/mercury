@@ -49,6 +49,11 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     ((parseJson(message.content) \ "Records")(0) \ "s3" \ "object" \ "key").extract[String]
   }
 
+  /**
+    * Publish a resource from S3 according to a "key" within a given Message
+    * @param message Message Containing a "key' to be used to acquire a resource from S3 and publish
+    * @return Future[Publication]
+    */
   def publish(message: Message): Future[Publication] = {
     info(message)
 
@@ -73,6 +78,10 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     }
   }
 
+  /**
+    * Publish all available resources on S3
+    * @return Future[Seq[Publication]
+    */
   def publish: Future[Seq[Publication]] = {
     info("Publishing")
 
