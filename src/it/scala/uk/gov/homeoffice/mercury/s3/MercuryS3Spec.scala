@@ -10,6 +10,7 @@ import org.specs2.control.NoLanguageFeatures
 import org.specs2.execute.{AsResult, Result}
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.aws.s3.{KMS, Push, S3}
+import uk.gov.homeoffice.configuration.HasConfig
 import uk.gov.homeoffice.specs2.ComposableAround
 
 /**
@@ -17,12 +18,12 @@ import uk.gov.homeoffice.specs2.ComposableAround
   * This integration test can either run against a locally running Hocs Fake instance, or an appropriate test environment
   * Running against some test environment would require the following environment variables set as in the following example:
   * <pre>
-  * sbt '; set javaOptions ++= Seq("-DAWS_S3_URI=<host>", "-DAWS_S3_CREDENTIALS_ACCESS_KEY=<access-key>", "-DAWS_S3_CREDENTIALS_SECRET_KEY=<secret-key>"); it:test-only *MercuryS3Spec'
+  * sbt '; set javaOptions ++= Seq("-DAWS_S3_URI=<host>", "-DAWS_S3_CREDENTIALS_ACCESS_KEY=<access-key>", "-DAWS_S3_CREDENTIALS_SECRET_KEY=<secret-key>", "-DAWS_S3_KMS_KEY=<kms-key>"); it:test-only *MercuryS3Spec'
   * </pre>
   * If none of the above environment variables are provided, then everything defaults to localhost services which can be achieved by first starting up "docker-compose up" before "it:test-only *MercuryS3Spec"
   * @param env ExecutionEnv For asynchronous testing
   */
-class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with NoLanguageFeatures {
+class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with NoLanguageFeatures with HasConfig {
   trait Context extends ComposableAround {
     val s3: S3 = uk.gov.homeoffice.mercury.boot.configuration.S3(new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.NO_RETRY_POLICY))
 
@@ -48,7 +49,7 @@ class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with NoLan
 
       val file = new File("src/it/resources/s3/test-file.txt")
 
-      s3.push(file.getName, file, Some(KMS("3923810b-6309-47af-a49c-d55dfaab6fc3"))) must beLike[Push] {
+      s3.push(file.getName, file, Some(KMS(config.getString("aws.s3.kms-key")))) must beLike[Push] {
         case Push.Completed(fileName, _, _) => fileName mustEqual file.getName
       }.awaitFor(30 seconds)
     }

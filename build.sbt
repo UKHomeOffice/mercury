@@ -19,6 +19,10 @@ javaOptions in Test ++= Seq(
   "-Dconfig.resource=application.test.conf"
 )
 
+javaOptions in IT ++= Seq(
+  "-Dconfig.resource=application.it.conf"
+)
+
 fork in run := true
 
 fork in Test := true

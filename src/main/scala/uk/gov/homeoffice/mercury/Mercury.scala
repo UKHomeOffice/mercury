@@ -83,9 +83,11 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     * @return Future[Seq[Publication]
     */
   def publish: Future[Seq[Publication]] = {
-    info("Publishing")
+    info("Publishing...")
 
     s3.pullResources().flatMap { pulledResources =>
+      if (pulledResources.isEmpty) info("No available resources to publish")
+
       val publications = pulledResources.toSeq.map { case (resourcesKey, resources) =>
         val fileParts = resources map {
           case Resource(key, inputStream, contentType, _, _) =>

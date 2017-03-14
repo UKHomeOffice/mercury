@@ -81,6 +81,8 @@ class MercuryActor(val s3: S3, credentials: Credentials, implicit val webService
           context.system.scheduler.scheduleOnce(10 seconds, self, Publish)
         } recoverWith {
           case t: Throwable =>
+            error(s"Publishing error: ${t.getMessage}")
+            t.printStackTrace()
             client ! t
             listeners foreach { _ ! t }
             context.unbecome()

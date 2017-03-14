@@ -14,9 +14,9 @@ trait MercuryBoot extends HasConfig with FeatureSwitch {
   val system = ActorSystem("mercury-actor-system", config)
   sys addShutdownHook system.terminate()
 
-  withFeature("aws.sqs.enabled") {
+  withFeature("aws.sqs.events-enabled") {
     system.actorOf(MercurySQSActor.props(SQS(), S3(), HocsCredentials(), HocsWebService()), name = "mercury-actor")
-  } orElse withFeature("aws.s3.enabled") {
+  } orElse withFeature("aws.s3.polling-enabled") {
     system.actorOf(MercuryS3Actor.props(S3(), HocsCredentials(), HocsWebService()), name = "mercury-actor")
   }
 }

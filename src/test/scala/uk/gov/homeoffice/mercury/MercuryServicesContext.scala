@@ -1,5 +1,6 @@
 package uk.gov.homeoffice.mercury
 
+import scala.collection.JavaConversions._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc.Results.{Ok, Unauthorized}
@@ -17,6 +18,8 @@ trait MercuryServicesContext extends S3ServerEmbedded with SQSServerEmbedded wit
   val password = "password"
   val credentials = Credentials(userName, password)
   val ticket = "TICKET"
+
+  s3Client.listBuckets().find(_.getName == bucket) getOrElse s3Client.createBucket(bucket)
 
   val mercuryEventMessage: ResourceKey => Message = { key =>
     createMessage(compact(render(mercuryEvent(key))))

@@ -79,6 +79,11 @@ spec:
             secretKeyRef:
               name: aws
               key: aws.s3.kms.id
+        - name: AWS_S3_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: hocs
+              key: aws.s3.region
         - name: WEB_SERVICES_HOCS_LOGIN_USER_NAME
           valueFrom:
             secretKeyRef:
