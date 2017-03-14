@@ -103,6 +103,8 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
         webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "email.txt")) ++ fileParts) map { response =>
           response.status match {
             case OK =>
+              info(s"Published resource with associated S3 key $resourcesKey")
+
               resources foreach { resource =>
                 s3.s3Client.deleteObject(s3.bucket, resource.key)
               }
@@ -110,7 +112,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
               Publication(Try(response.json).map(jValue).getOrElse(JNothing))
 
             case _ =>
-              throw new Exception(s"""Failed to publish to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText}""")
+              throw new Exception(s"""Failed to publish to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText} with body:\n${response.body}""")
           }
         }
       }
