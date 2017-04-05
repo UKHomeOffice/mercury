@@ -74,6 +74,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
   private def processEmail(resource: Resource): Future[Publication] = {
     //Parse email from raw text
     val email = EmailParser.parse(resource.inputStream)
+    resource.inputStream.close()
     //Generate pdf file with email contents
     val pdf = EmailPdfGenerator.generatePdf(email)
 
@@ -85,7 +86,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(
       DataPart("caseType", email.to.substring(0, email.to.indexOf("@"))), DataPart("name", pdf.getName), filePart)
     ) map { response =>
-      val res = response.status match {
+      response.status match {
         case OK =>
           info(s"Published resource with associated S3 key ${resource.key}")
 
@@ -96,9 +97,8 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
         case _ =>
           throw new Exception(s"""Failed to publish to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText} with body:\n${response.body}""")
       }
-
+    } andThen { case _ =>
       pdf.delete()
-      res
     }
   }
 }

@@ -12,10 +12,10 @@ class EmailPdfGeneratorSpec extends Specification {
 
   "EmailPdfGenerator" should {
     "Generate a pdf correctly" in new Context {
-      val email = EmailContents("from@email.com", "to@email.com", "Test Subject", "Some Content\r\nOver here", "")
+      val email = EmailContents("from@email.com", "to@email.com", "Test Subject", "Some Content\r\nOver here", "", Nil)
       val pdf = pdfGenerator.generatePdf(email)
       pdf.exists() must beTrue
-      pdf.length() mustEqual 1215
+      pdf.length() mustEqual 1216
       pdf.delete()
     }
   }

@@ -10,7 +10,7 @@ trait PdfGenerator {
     val renderer = new ITextRenderer()
     renderer.setDocumentFromString(doc)
     renderer.layout()
-    val file = File.createTempFile("email_pdf", ".pdf")
+    val file = File.createTempFile("email-pdf", ".pdf")
     val fos = new FileOutputStream(file)
     renderer.createPDF(fos)
     fos.close()

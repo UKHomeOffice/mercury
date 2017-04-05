@@ -1,12 +1,15 @@
 package uk.gov.homeoffice.mercury.email
 
 import java.io.InputStream
+import javax.mail.Part
 
-import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody}
-import org.apache.james.mime4j.message.{BodyPart, DefaultMessageBuilder}
+import org.apache.commons.io.IOUtils
+import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
+import org.apache.james.mime4j.dom._
+import org.apache.james.mime4j.message.DefaultMessageBuilder
 
 import scala.collection.JavaConverters._
-import scala.io.Source
+import scala.collection.mutable.ListBuffer
 
 object EmailParser extends EmailParser
 
@@ -17,17 +20,19 @@ trait EmailParser {
     val message = builder.parseMessage(inputStream)
     val (txt, html, attachs) = parseMessage(message)
     message.dispose
+
     EmailContents(from = message.getFrom.get(0).getAddress,
       to = message.getTo.flatten().get(0).getAddress,
       subject = message.getSubject,
       txt = txt,
-      html = html)
+      html = html,
+      attachments = attachs)
   }
 
   private def parseMessage(mimeMsg: Message) = {
     val txtBody: StringBuilder = new StringBuilder
     val htmlBody: StringBuilder = new StringBuilder
-    val attachments: List[BodyPart] = List.empty
+    val attachments: ListBuffer[Entity] = new ListBuffer[Entity]()
 
     def parseBodyParts(multipart: Multipart) {
 
@@ -39,9 +44,8 @@ trait EmailParser {
           val html = getTxtPart(part)
           htmlBody.append(html)
 
-        case _ => if (part.getDispositionType() != null && !part.getDispositionType().isEmpty)
-        //If DispositionType is null or empty, it means that it's multipart, not attached file
-          part :: attachments
+        case _ => if (Part.ATTACHMENT == part.getDispositionType)
+          attachments += part
       }
 
       val bodyParts = multipart.getBodyParts().asScala.toList
@@ -52,12 +56,18 @@ trait EmailParser {
     }
 
     extractParts(mimeMsg, txtBody, parseBodyParts)
-    (txtBody.toString.trim, htmlBody.toString.trim, attachments)
+    (txtBody.toString.trim, htmlBody.toString.trim,
+      attachments.map { a =>
+        EmailAttachment(a.getMimeType, DecoderUtil.decodeEncodedWords(a.getFilename, DecodeMonitor.SILENT), a.getBody.asInstanceOf[BinaryBody])
+      })
   }
 
   private def getTxtPart(part: Entity): String = {
     val body = part.getBody().asInstanceOf[TextBody]
-    Source.fromInputStream(body.getInputStream).mkString
+    val is = body.getInputStream
+    val res = IOUtils.readLines(is).asScala.mkString("\n")
+    is.close()
+    res
   }
 
   private def extractParts(mimeMsg: Message, txtBody: StringBuilder,
