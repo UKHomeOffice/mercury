@@ -1,14 +1,14 @@
 package uk.gov.homeoffice.mercury.boot
 
-import scala.language.postfixOps
 import akka.actor.{PoisonPill, Props}
 import akka.cluster.singleton.{ClusterSingletonManager, ClusterSingletonManagerSettings}
 import uk.gov.homeoffice.akka.cluster.ClusterActorSystem
 import uk.gov.homeoffice.configuration.HasConfig
 import uk.gov.homeoffice.feature.FeatureSwitch
 import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService, S3, SQS}
-import uk.gov.homeoffice.mercury.s3.{MercuryActor => MercuryS3Actor}
 import uk.gov.homeoffice.mercury.sqs.{MercuryActor => MercurySQSActor}
+
+import scala.language.postfixOps
 
 /**
   * sbt '; set javaOptions += "-Dcluster.node=1"; run'
@@ -21,11 +21,7 @@ trait MercuryBoot extends HasConfig with FeatureSwitch {
   val system = ClusterActorSystem()
   sys addShutdownHook system.terminate()
 
-  withFeature("aws.sqs.events-enabled") {
-    system.actorOf(singletonProps(MercurySQSActor.props(SQS(), S3(), HocsCredentials(), HocsWebService())), name = "mercury-actor")
-  } orElse withFeature("aws.s3.polling-enabled") {
-    system.actorOf(singletonProps(MercuryS3Actor.props(S3(), HocsCredentials(), HocsWebService())), name = "mercury-actor")
-  }
+  system.actorOf(singletonProps(MercurySQSActor.props(SQS(), S3(), HocsCredentials(), HocsWebService())), name = "mercury-actor")
 
   def singletonProps(p: Props) = try {
     ClusterSingletonManager.props(
