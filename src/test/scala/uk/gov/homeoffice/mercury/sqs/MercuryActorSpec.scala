@@ -1,16 +1,17 @@
 package uk.gov.homeoffice.mercury.sqs
 
 import java.io.File
+
 import akka.actor.Props
 import akka.testkit.TestActorRef
+import org.specs2.concurrent.ExecutionEnv
+import org.specs2.mock.Mockito
+import org.specs2.mutable.Specification
 import play.api.mvc.Action
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc.Results._
 import play.api.routing.sird._
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.mock.Mockito
-import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.{ActorExpectations, ActorSystemSpecification}
 import uk.gov.homeoffice.aws.sqs.{Queue, SQS}
 import uk.gov.homeoffice.mercury.Protocol.Authorized
@@ -62,14 +63,14 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
     }
 
     "receive a Mercury SQS message event and be notified when the associated resource has been published" in new Context {
-      val file = new File(s"$s3Directory/test-file.txt")
+      val file = new File(s"$s3Directory/test-email.txt")
       val fileName = file.getName
       val key = fileName
 
       routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
-          // Expect one file of type text/plain
-          val Seq(FilePart("file", `fileName`, Some("text/plain; charset=UTF-8"), _)) = request.body.files
+          // Expect one file of type application/pdf
+          val Seq(FilePart("file", _, Some("application/pdf"), _)) = request.body.files
           Ok
         }
       }) { webService =>

@@ -1,9 +1,12 @@
 package uk.gov.homeoffice.mercury
 
-import java.io.{ByteArrayInputStream, File, FileInputStream}
+import java.io.{ByteArrayInputStream, FileInputStream}
+
 import akka.http.scaladsl.model.MediaTypes._
 import akka.stream.scaladsl.StreamConverters._
 import akka.stream.scaladsl.{Source, StreamConverters}
+import org.specs2.concurrent.ExecutionEnv
+import org.specs2.mutable.Specification
 import play.api.http.Status._
 import play.api.libs.ws.WSResponse
 import play.api.mvc.BodyParsers.parse
@@ -11,8 +14,6 @@ import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc.Results._
 import play.api.mvc.{Action, Handler, RequestHeader}
 import play.api.routing.sird._
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.mutable.Specification
 import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
 import uk.gov.homeoffice.web.WebServiceSpecification
 
@@ -21,10 +22,6 @@ class MercuryWebServiceSpec(implicit env: ExecutionEnv) extends Specification wi
 
   val emailsRoute: PartialFunction[RequestHeader, Handler] = {
     case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
-      request.body.files.foreach { filePart =>
-        filePart.ref.moveTo(new File(s"./read-${filePart.filename}"))
-      }
-
       Ok
     }
   }

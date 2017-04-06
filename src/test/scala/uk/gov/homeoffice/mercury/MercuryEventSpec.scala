@@ -1,19 +1,21 @@
 package uk.gov.homeoffice.mercury
 
 import java.io.File
-import scala.concurrent.duration._
-import scala.language.postfixOps
+
+import org.specs2.concurrent.ExecutionEnv
+import org.specs2.control.NoLanguageFeatures
+import org.specs2.mock.Mockito
+import org.specs2.mutable.Specification
 import play.api.mvc.Action
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc.Results._
 import play.api.routing.sird._
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.control.NoLanguageFeatures
-import org.specs2.mock.Mockito
-import org.specs2.mutable.Specification
 import uk.gov.homeoffice.aws.s3.S3
 import uk.gov.homeoffice.web.{WebService, WebServiceSpecification}
+
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 class MercuryEventSpec(implicit env: ExecutionEnv) extends Specification with WebServiceSpecification with Mockito with NoLanguageFeatures {
   "Mercury event" should {
@@ -26,7 +28,7 @@ class MercuryEventSpec(implicit env: ExecutionEnv) extends Specification with We
 
   "Mercury complete event" should {
     "parsed and processed" in new MercuryServicesContext {
-      val file = new File(s"$s3Directory/test-file.txt")
+      val file = new File(s"$s3Directory/test-email.txt")
       val fileName = file.getName
       val key = fileName
 
@@ -70,8 +72,8 @@ class MercuryEventSpec(implicit env: ExecutionEnv) extends Specification with We
 
       routes(authorizeRoute orElse authorizeCheck orElse {
         case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
-          // Expect one file of type text/plain
-          val Seq(FilePart("file", `fileName`, Some("text/plain; charset=UTF-8"), _)) = request.body.files
+          // Expect one file of type application/pdf
+          val Seq(FilePart("file", _, Some("application/pdf"), _)) = request.body.files
           Ok
         }
       }) { implicit ws =>
