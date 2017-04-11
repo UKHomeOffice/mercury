@@ -2,8 +2,8 @@ FROM hseeberger/scala-sbt
 
 COPY . .
 
-RUN sbt assembly
+COPY target/scala-2.11/mercury.jar /code/mercury.jar
 
 EXPOSE 9100
 
-CMD java -jar /root/target/scala-2.11/mercury.jar
+ENTRYPOINT java -jar /code/mercury.jar
