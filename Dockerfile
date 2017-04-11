@@ -1,9 +1,9 @@
-FROM hseeberger/scala-sbt
+FROM openjdk:8
 
-COPY . .
+COPY target/scala-2.11/mercury.jar /code/mercury.jar
 
-RUN sbt assembly
+WORKDIR /code
 
 EXPOSE 9100
 
-CMD java -jar /root/target/scala-2.11/mercury.jar
+ENTRYPOINT java -jar /code/mercury.jar
