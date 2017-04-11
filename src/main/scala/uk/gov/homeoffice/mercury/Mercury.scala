@@ -16,7 +16,7 @@ import uk.gov.homeoffice.aws.sqs.Message
 import uk.gov.homeoffice.configuration.HasConfig
 import uk.gov.homeoffice.json.Json._
 import uk.gov.homeoffice.mercury.MediaTypes.Implicits._
-import uk.gov.homeoffice.mercury.email.EmailParser
+import uk.gov.homeoffice.mercury.email.{EmailAttachment, EmailParser}
 import uk.gov.homeoffice.mercury.pdf.EmailPdfGenerator
 import uk.gov.homeoffice.web.WebService
 
@@ -28,7 +28,9 @@ import scala.util.Try
 object Mercury {
   val authorizationEndpoint = "/alfresco/s/api/login"
 
-  val publicationEndpoint = "/alfresco/s/homeoffice/cts/autoCreateDocument"
+  val publicationEndpoint = "/alfresco/s/homeoffice/ctsv2/createCase"
+
+  val attachmentEndpoint = "/alfresco/s/homeoffice/cts/document"
 
   def authorize(credentials: Credentials)(implicit webService: WebService): Future[WebService with Authorization] = {
     webService endpoint authorizationEndpoint post credentials flatMap { response =>
@@ -84,13 +86,17 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     info(s"""Publishing to endpoint ${webService.host}$publicationEndpoint, resource with S3 key "${resource.key}"""")
 
     webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(
-      DataPart("caseType", email.to.substring(0, email.to.indexOf("@"))), DataPart("name", pdf.getName), filePart)
+      DataPart("caseType", email.to.substring(0, email.to.indexOf("@"))), filePart)
     ) map { response =>
       response.status match {
         case OK =>
           info(s"Published resource with associated S3 key ${resource.key}")
 
           s3.s3Client.deleteObject(s3.bucket, resource.key)
+
+          val caseRef = (response.json \ "caseRef").as[String]
+
+          email.attachments.foreach(addAttachment(caseRef, _))
 
           Publication(Try(response.json).map(jValue).getOrElse(JNothing))
 
@@ -99,6 +105,21 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
       }
     } andThen { case _ =>
       pdf.delete()
+    }
+  }
+
+  private def addAttachment(caseRef: String, emailAttachment: EmailAttachment): Future[Unit] = {
+    val data = StreamConverters.fromInputStream(() => emailAttachment.body.getInputStream)
+    val filePart = FilePart("file", emailAttachment.name, Some(emailAttachment.contentType), data)
+
+    webService endpoint attachmentEndpoint withQueryString authorizationParam post Source(List(
+      DataPart("name", emailAttachment.name), DataPart("destination", caseRef), filePart)
+    ) map { response =>
+      response.status match {
+        case OK => {}
+        case _ =>
+          error(s"""Failed to publish attachment to "${webService.host}" because of: Http response status ${response.status}, ${response.statusText} with body:\n${response.body}""")
+      }
     }
   }
 }

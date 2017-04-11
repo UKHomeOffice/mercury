@@ -7,6 +7,7 @@ import akka.testkit.TestActorRef
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc.MultipartFormData.FilePart
@@ -46,8 +47,8 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
     "receive a Mercury SQS message event but not have anything to publish" in new Context {
       routes(authorizeRoute orElse authorizeCheck orElse {
-        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action {
-          Ok
+        case POST(p"/alfresco/s/homeoffice/ctsv2/createCase") => Action {
+          Ok(Json.obj("caseRef" -> "CaseRef"))
         }
       }) { webService =>
         val mercuryActor = TestActorRef(Props(new MercuryActor(new SQS(queue), s3, credentials, webService)))
@@ -68,10 +69,10 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
       val key = fileName
 
       routes(authorizeRoute orElse authorizeCheck orElse {
-        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
+        case POST(p"/alfresco/s/homeoffice/ctsv2/createCase") => Action(parse.multipartFormData) { request =>
           // Expect one file of type application/pdf
           val Seq(FilePart("file", _, Some("application/pdf"), _)) = request.body.files
-          Ok
+          Ok(Json.obj("caseRef" -> "CaseRef"))
         }
       }) { webService =>
         val mercuryActor = TestActorRef(Props(new MercuryActor(new SQS(queue), s3, credentials, webService)))
@@ -88,7 +89,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
 
     "restart (and so re-authorize) upon receiving an exception" in new Context {
       routes(authorizeRoute orElse authorizeCheck orElse {
-        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { _ =>
+        case POST(p"/alfresco/s/homeoffice/ctsv2/createCase") => Action(parse.multipartFormData) { _ =>
           BadRequest
         }
       }) { webService =>

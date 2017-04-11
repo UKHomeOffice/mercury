@@ -6,6 +6,7 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.control.NoLanguageFeatures
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc.MultipartFormData.FilePart
@@ -71,10 +72,10 @@ class MercuryEventSpec(implicit env: ExecutionEnv) extends Specification with We
       }"""
 
       routes(authorizeRoute orElse authorizeCheck orElse {
-        case POST(p"/alfresco/s/homeoffice/cts/autoCreateDocument") => Action(parse.multipartFormData) { request =>
+        case POST(p"/alfresco/s/homeoffice/ctsv2/createCase") => Action(parse.multipartFormData) { request =>
           // Expect one file of type application/pdf
           val Seq(FilePart("file", _, Some("application/pdf"), _)) = request.body.files
-          Ok
+          Ok(Json.obj("caseRef" -> "CaseRef"))
         }
       }) { implicit ws =>
         val publication = for {

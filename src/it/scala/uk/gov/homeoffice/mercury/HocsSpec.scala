@@ -1,16 +1,18 @@
 package uk.gov.homeoffice.mercury
 
 import java.io.ByteArrayInputStream
-import scala.concurrent.duration._
+
 import akka.stream.scaladsl.Source
 import akka.stream.scaladsl.StreamConverters.fromInputStream
-import play.api.http.Status._
-import play.api.libs.ws.WSResponse
-import play.api.mvc.MultipartFormData.{DataPart, FilePart}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
+import play.api.http.Status._
+import play.api.libs.ws.WSResponse
+import play.api.mvc.MultipartFormData.{DataPart, FilePart}
 import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService}
+
+import scala.concurrent.duration._
 
 /**
   * As this spec connects to an internal system, running locally may require VPN.
@@ -60,7 +62,7 @@ class HocsSpec(implicit env: ExecutionEnv) extends Specification {
         val email = fromInputStream(() => new ByteArrayInputStream("Blah blah blah blah".getBytes))
         val emailFilePart = FilePart("file", "email.txt", Some("text/plain"), email)
 
-        webService endpoint "/alfresco/s/homeoffice/cts/autoCreateDocument" withQueryString ("alf_ticket" -> ticket) post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "An Email"), emailFilePart))
+        webService endpoint "/alfresco/s/homeoffice/ctsv2/createCase" withQueryString ("alf_ticket" -> ticket) post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "An Email"), emailFilePart))
       } must beLike[WSResponse] {
         case response =>
           println(response.json)
