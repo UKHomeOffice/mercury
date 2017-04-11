@@ -68,6 +68,10 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
 
     s3 pullResource parse(message) flatMap { resource =>
       processEmail(resource)
+    } recoverWith {
+      case ex =>
+        error(ex.getMessage, ex)
+        Future.failed(ex)
     }
   }
 
