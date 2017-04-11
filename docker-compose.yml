@@ -12,7 +12,7 @@ services:
       - 4569:4569
 
   hocs:
-    image: davidainslie/hocs-fake
+    image: quay.io/ukhomeofficedigital/hocs-fake
     ports:
       - 9000:9000
 
