@@ -8,5 +8,5 @@ data:
   aws.sqs.uri: "https://sqs.eu-west-1.amazonaws.com/449472082214"
   aws.sqs.queues.mercury: hocs-dev-mercury
   aws.s3.uri: "https://s3.eu-west-1.amazonaws.com"
-  aws.s3.buckets.mercury: hocs-dev-deveu-west-1
+  aws.s3.buckets.mercury: hocs-dev-dev-eu-west-1
   aws.s3.region: eu-west-1
