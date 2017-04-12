@@ -9,7 +9,7 @@ object EmailPdfGenerator extends EmailPdfGenerator
 
 class EmailPdfGenerator extends PdfGenerator {
 
-  private val pdfTemplate = FileUtils.readFileToString(new File(getClass.getResource("/pdf-template.html").toURI))
+  private val pdfTemplate = FileUtils.readFileToString(new File(getClass.getResource("/pdf-template.html").getPath))
 
   def generatePdf(email: EmailContents) = {
     val doc = pdfTemplate.replace("@@From@@", email.from)
