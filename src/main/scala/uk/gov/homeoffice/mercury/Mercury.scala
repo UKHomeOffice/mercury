@@ -117,7 +117,8 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
     val filePart = FilePart("file", emailAttachment.name, Some(emailAttachment.contentType), data)
 
     webService endpoint attachmentEndpoint withQueryString authorizationParam post Source(List(
-      DataPart("name", emailAttachment.name), DataPart("destination", caseRef), filePart)
+      DataPart("name", emailAttachment.name), DataPart("destination", caseRef),
+      DataPart("documenttype", emailAttachment.contentType), DataPart("documentdescription", "Email attachment"), filePart)
     ) map { response =>
       response.status match {
         case OK => {}
