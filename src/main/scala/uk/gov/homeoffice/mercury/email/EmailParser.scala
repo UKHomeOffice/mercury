@@ -7,6 +7,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom._
 import org.apache.james.mime4j.message.DefaultMessageBuilder
+import org.apache.james.mime4j.stream.MimeConfig
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
@@ -16,7 +17,9 @@ object EmailParser extends EmailParser
 trait EmailParser {
 
   def parse(inputStream: InputStream): EmailContents = {
+    val mimeConfig = new MimeConfig.Builder().setMaxLineLen(-1).build()
     val builder = new DefaultMessageBuilder()
+    builder.setMimeEntityConfig(mimeConfig)
     val message = builder.parseMessage(inputStream)
     val (txt, html, attachs) = parseMessage(message)
     message.dispose
