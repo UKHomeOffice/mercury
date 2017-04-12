@@ -1,13 +1,16 @@
 package uk.gov.homeoffice.mercury.boot.configuration
 
 import java.net.URL
-import scala.util.Try
+
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.s3.S3ClientOptions
-import uk.gov.homeoffice.aws.s3.S3Client
+import com.amazonaws.services.s3.model.{CryptoConfiguration, KMSEncryptionMaterialsProvider}
+import uk.gov.homeoffice.aws.s3.S3EncryptionClient
 import uk.gov.homeoffice.configuration.HasConfig
+
+import scala.util.Try
 
 object S3 extends HasConfig {
   def apply(clientConfiguration: ClientConfiguration = new ClientConfiguration) = {
@@ -16,14 +19,14 @@ object S3 extends HasConfig {
     val accessKey = config.getString("aws.s3.credentials.access-key")
     val secretKey = config.getString("aws.s3.credentials.secret-key")
 
-    implicit val s3Client = new S3Client(s3Host, new BasicAWSCredentials(accessKey, secretKey))(clientConfiguration)
+    val regions = Regions.fromName(config.getString("aws.s3.region"))
+
+    implicit val s3Client = new S3EncryptionClient(s3Host, new BasicAWSCredentials(accessKey, secretKey),
+      new KMSEncryptionMaterialsProvider(config.getString("aws.s3.kms-key")),
+      new CryptoConfiguration().withKmsRegion(regions))(clientConfiguration)
     s3Client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build())
 
-    Try {
-      config.getString("aws.s3.region")
-    } map { region =>
-      s3Client.setRegion(Region.getRegion(Regions.fromName(region)))
-    }
+    s3Client.setRegion(Region.getRegion(regions))
 
     val mercuryBucket = config.getString("aws.s3.buckets.mercury")
 
