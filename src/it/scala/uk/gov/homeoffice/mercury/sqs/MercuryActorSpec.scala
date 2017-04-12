@@ -1,7 +1,7 @@
 package uk.gov.homeoffice.mercury.sqs
 
 import java.io.File
-import scala.util.Try
+
 import akka.actor.Props
 import akka.testkit.TestActorRef
 import com.amazonaws.ClientConfiguration
@@ -12,12 +12,14 @@ import org.specs2.execute.{AsResult, Result}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import uk.gov.homeoffice.akka.{ActorExpectations, ActorSystemSpecification}
-import uk.gov.homeoffice.aws.s3.S3
+import uk.gov.homeoffice.aws.s3.{S3, S3EncryptionClient}
 import uk.gov.homeoffice.aws.sqs.{SQS, _}
 import uk.gov.homeoffice.configuration.HasConfig
 import uk.gov.homeoffice.mercury.boot.configuration.{HocsCredentials, HocsWebService}
 import uk.gov.homeoffice.mercury.{MercuryEvent, Publication}
 import uk.gov.homeoffice.web.WebService
+
+import scala.util.Try
 
 /**
   * As this spec connects to an internal system, running locally may require VPN.
@@ -40,7 +42,7 @@ class MercuryActorSpec(implicit env: ExecutionEnv) extends Specification with Ac
     } finally {
       // Need to close everything down (gracefully) if running in sbt interactive mode, we don't want anything hanging around.
       Try { sqs.sqsClient.shutdown() }
-      Try { s3.s3Client.shutdown() }
+      Try { s3.s3Client.asInstanceOf[S3EncryptionClient].shutdown() }
       Try { hocsWebService.wsClient.close() }
     }
   }
