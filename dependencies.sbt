@@ -17,11 +17,10 @@ val `play-version` = "2.5.12"
 val `scalactic-version` = "3.0.1"
 val `ammonite-version` = "0.8.2"
 val `akka-scala-lib-version` = "2.1.17"
-val `aws-scala-lib-version` = "1.2.1"
+val `aws-scala-lib-version` = "1.2.2"
 val `io-scala-lib-version` = "1.9.12"
 val `mime4j-version` = "0.8.0"
 val `flying-saucer-version` = "9.1.5"
-val `bouncy-castle-version` = "1.55"
 
 val `test-scala-lib-version` = "1.4.4"
 
@@ -35,8 +34,7 @@ libraryDependencies ++= Seq(
   "com.github.UKHomeOffice" %% "io-scala-lib" % `io-scala-lib-version`,
   "org.apache.james" % "apache-mime4j" % `mime4j-version`,
   "org.xhtmlrenderer" % "flying-saucer-core" % `flying-saucer-version`,
-  "org.xhtmlrenderer" % "flying-saucer-pdf" % `flying-saucer-version` exclude("org.bouncycastle", "bcprov-jdk14"),
-  "org.bouncycastle" % "bcprov-ext-jdk15on" % `bouncy-castle-version`
+  "org.xhtmlrenderer" % "flying-saucer-pdf" % `flying-saucer-version` exclude("org.bouncycastle", "bcprov-jdk14")
 )
 
 libraryDependencies ++= Seq(
