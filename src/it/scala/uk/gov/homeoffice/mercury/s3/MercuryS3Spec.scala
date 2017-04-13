@@ -1,17 +1,19 @@
 package uk.gov.homeoffice.mercury.s3
 
 import java.io.File
-import scala.concurrent.duration._
-import scala.language.postfixOps
+
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.retry.PredefinedRetryPolicies
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.control.NoLanguageFeatures
 import org.specs2.execute.{AsResult, Result}
 import org.specs2.mutable.Specification
-import uk.gov.homeoffice.aws.s3.{KMS, Push, S3}
+import uk.gov.homeoffice.aws.s3.{KMS, Push, S3, S3EncryptionClient}
 import uk.gov.homeoffice.configuration.HasConfig
 import uk.gov.homeoffice.specs2.ComposableAround
+
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 /**
   * As this spec connects to an internal system, running locally may require VPN.
@@ -21,6 +23,7 @@ import uk.gov.homeoffice.specs2.ComposableAround
   * sbt '; set javaOptions ++= Seq("-DAWS_S3_URI=<host>", "-DAWS_S3_CREDENTIALS_ACCESS_KEY=<access-key>", "-DAWS_S3_CREDENTIALS_SECRET_KEY=<secret-key>", "-DAWS_S3_KMS_KEY=<kms-key>"); it:test-only *MercuryS3Spec'
   * </pre>
   * If none of the above environment variables are provided, then everything defaults to localhost services which can be achieved by first starting up "docker-compose up" before "it:test-only *MercuryS3Spec"
+ *
   * @param env ExecutionEnv For asynchronous testing
   */
 class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with NoLanguageFeatures with HasConfig {
@@ -31,7 +34,7 @@ class MercuryS3Spec(implicit env: ExecutionEnv) extends Specification with NoLan
       super.around(r)
     } finally {
       // Need to close everything down (gracefully) if running in sbt interactive mode, we don't want anything hanging around.
-      s3.s3Client.shutdown()
+      s3.s3Client.asInstanceOf[S3EncryptionClient].shutdown()
     }
   }
 

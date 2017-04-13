@@ -1,15 +1,13 @@
 package uk.gov.homeoffice.mercury.pdf
 
-import java.io.File
-
-import org.apache.commons.io.FileUtils
+import org.apache.commons.io.IOUtils
 import uk.gov.homeoffice.mercury.email.EmailContents
 
 object EmailPdfGenerator extends EmailPdfGenerator
 
 class EmailPdfGenerator extends PdfGenerator {
 
-  private val pdfTemplate = FileUtils.readFileToString(new File(getClass.getResource("/pdf-template.html").toURI))
+  private val pdfTemplate = getPdfTemplate()
 
   def generatePdf(email: EmailContents) = {
     val doc = pdfTemplate.replace("@@From@@", email.from)
@@ -20,4 +18,10 @@ class EmailPdfGenerator extends PdfGenerator {
     super.generatePdf(doc)
   }
 
+  private def getPdfTemplate() = {
+    val pdfTemplateRes = getClass().getResourceAsStream("/pdf-template.html")
+    val pdfTemplate = IOUtils.toString(pdfTemplateRes)
+    pdfTemplateRes.close()
+    pdfTemplate
+  }
 }
