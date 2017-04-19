@@ -58,7 +58,7 @@ pipeline:
     commands:
       - "kd --insecure-skip-tls-verify -f kube/configmaps/${KUBE_NAMESPACE}.yaml -f kube/deployment.yml -f kube/service.yml"
     environment:
-      - REPLICAS=1
+      - REPLICAS=3
       - KUBE_NAMESPACE=hocs-dev
       - "KUBE_SERVER=https://kube-dev.dsp.notprod.homeoffice.gov.uk"
       - INSECURE_SKIP_TLS_VERIFY=true
@@ -79,6 +79,19 @@ pipeline:
     when:
       event: deployment
       environment: qa
+
+  trigger_deploy_to_prod:
+    commands:
+      - "kd --insecure-skip-tls-verify -f kube/configmaps/${KUBE_NAMESPACE}.yaml -f kube/deployment.yml -f kube/service.yml"
+    environment:
+      - REPLICAS=3
+      - KUBE_NAMESPACE=hocs
+      - "KUBE_SERVER=https://kube.dsp.digital.homeoffice.gov.uk"
+      - INSECURE_SKIP_TLS_VERIFY=true
+    image: quay.io/ukhomeofficedigital/kd:v0.2.2
+    when:
+      event: deployment
+      environment: prod
 
 services:
   dind:
