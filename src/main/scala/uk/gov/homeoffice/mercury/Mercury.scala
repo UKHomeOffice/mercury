@@ -3,13 +3,15 @@ package uk.gov.homeoffice.mercury
 import java.io.FileInputStream
 
 import akka.http.scaladsl.model.MediaTypes._
+import akka.stream.IOResult
 import akka.stream.scaladsl.{Source, StreamConverters}
+import akka.util.ByteString
 import grizzled.slf4j.Logging
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST.JNothing
 import org.json4s.jackson.parseJson
 import play.api.http.Status._
-import play.api.mvc.MultipartFormData.{DataPart, FilePart}
+import play.api.mvc.MultipartFormData.{Part, DataPart, FilePart}
 import uk.gov.homeoffice.aws.s3.S3.ResourceKey
 import uk.gov.homeoffice.aws.s3._
 import uk.gov.homeoffice.aws.sqs.Message
@@ -89,10 +91,16 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
 
     val caseType = email.to.substring(0, email.to.indexOf("@")).toUpperCase
 
+    val to = email.to
+
+    val subject = email.subject
+
     info(s"""Publishing Case type $caseType to endpoint ${webService.host}$publicationEndpoint, resource with S3 key "${resource.key}"""")
 
-    webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(
-      DataPart("caseType", caseType), filePart)
+    val formData: List[Part[Source[ByteString, Future[IOResult]]] with Product with Serializable] = List(
+      DataPart("caseType", caseType), DataPart("to", to), DataPart("subject", subject), filePart)
+
+    webService endpoint publicationEndpoint withQueryString authorizationParam post Source(formData
     ) map { response =>
       response.status match {
         case OK =>
