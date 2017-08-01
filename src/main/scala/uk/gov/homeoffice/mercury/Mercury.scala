@@ -89,13 +89,9 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
 
     val caseType = email.to.substring(0, email.to.indexOf("@")).toUpperCase
 
-    val to = email.to
-
-    val subject = email.subject
-
     info(s"""Publishing Case type $caseType to endpoint ${webService.host}$publicationEndpoint, resource with S3 key "${resource.key}"""")
 
-    val formData = List(DataPart("caseType", caseType), DataPart("to", to), DataPart("subject", subject), filePart)
+    val formData = List(DataPart("caseType", caseType), DataPart("to", email.to), DataPart("subject", email.subject), filePart)
 
     webService endpoint publicationEndpoint withQueryString authorizationParam post Source(formData
     ) map { response =>
