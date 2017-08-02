@@ -62,7 +62,7 @@ class HocsSpec(implicit env: ExecutionEnv) extends Specification {
         val email = fromInputStream(() => new ByteArrayInputStream("Blah blah blah blah".getBytes))
         val emailFilePart = FilePart("file", "email.txt", Some("text/plain"), email)
 
-        webService endpoint "/alfresco/s/homeoffice/ctsv2/createCase" withQueryString ("alf_ticket" -> ticket) post Source(List(DataPart("caseType", "IMCB"), DataPart("name", "An Email"), emailFilePart))
+        webService endpoint "/alfresco/s/homeoffice/ctsv2/createCase" withQueryString ("alf_ticket" -> ticket) post Source(List(DataPart("caseType", "IMCB"), DataPart("to", "IMCB@hocs.digital.co.uk"), DataPart("subject", "its Test message"), DataPart("name", "An Email"), emailFilePart))
       } must beLike[WSResponse] {
         case response =>
           println(response.json)

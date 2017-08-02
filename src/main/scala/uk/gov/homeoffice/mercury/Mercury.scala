@@ -93,8 +93,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
 
     val formData = List(DataPart("caseType", caseType), DataPart("to", email.to), DataPart("subject", email.subject), filePart)
 
-    webService endpoint publicationEndpoint withQueryString authorizationParam post Source(formData
-    ) map { response =>
+    webService endpoint publicationEndpoint withQueryString authorizationParam post Source(formData) map { response =>
       response.status match {
         case OK =>
           info(s"Published resource with associated S3 key ${resource.key}")
