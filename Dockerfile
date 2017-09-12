@@ -11,7 +11,7 @@ ENV SCALA_HOME /usr/share/scala
 ENV SBT_HOME /usr/share/sbt
 
 # Install APK dependencies
-RUN apk add --no-cache --virtual=.build-dependencies wget ca-certificates bash && \
+RUN apk add --no-cache wget ca-certificates bash && \
     update-ca-certificates && \
     apk add --no-cache openssl
 
@@ -22,7 +22,8 @@ RUN cd /tmp && \
     mkdir "${SCALA_HOME}" && \
     rm "/tmp/scala-${SCALA_VERSION}/bin/"*.bat && \
     mv "/tmp/scala-${SCALA_VERSION}/bin" "/tmp/scala-${SCALA_VERSION}/lib" "${SCALA_HOME}" && \
-    ln -s "${SCALA_HOME}/bin/"* "/usr/bin/"
+    ln -s "${SCALA_HOME}/bin/"* "/usr/bin/" && \
+    rm -rf "/tmp/"*
 
 # Install SBT
 RUN cd /tmp && \
@@ -30,7 +31,6 @@ RUN cd /tmp && \
     tar xzf "sbt-${SBT_VERSION}.tgz" && \
     mv "/tmp/sbt" "${SBT_HOME}" && \
     ln -s "${SBT_HOME}/bin/"* "/usr/bin/" && \
-    apk del .build-dependencies && \
     rm -rf "/tmp/"*
 
 # download Java Cryptography Extension
