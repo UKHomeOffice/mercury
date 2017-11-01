@@ -29,6 +29,8 @@ spec:
         ports:
         - containerPort: 9100
         env:
+        - name: JAVA_OPTS
+          value: '-Xms150m -Xmx250m'
         - name: WEB_SERVICES_HOCS_URI
           valueFrom:
             configMapKeyRef:
