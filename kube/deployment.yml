@@ -25,16 +25,16 @@ spec:
         imagePullPolicy: Always
         resources:
           limits:
-            memory: 1024Mi
-            cpu: 200m
+            memory: 2048Mi
+            cpu: 1600m
           requests:
-            memory: 1024Mi
-            cpu: 200m
+            memory: 484Mi
+            cpu: 100m
         ports:
         - containerPort: 9100
         env:
         - name: JAVA_OPTS
-          value: '-Xms150m -Xmx768m'
+          value: '-Xms150m -Xmx1536m'
         - name: WEB_SERVICES_HOCS_URI
           valueFrom:
             configMapKeyRef:
