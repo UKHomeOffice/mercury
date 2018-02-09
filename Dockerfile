@@ -1,5 +1,13 @@
 FROM openjdk:8-jdk-alpine
 
+ENV USER user_hocs_reporting
+ENV GROUP group_hocs_reporting
+
+RUN groupadd -r ${GROUP} && \
+    useradd -r -g ${GROUP} ${USER} -d /code && \
+    mkdir -p /code && \
+    chown -R ${USER}:${GROUP} /code
+
 COPY . .
 
 COPY target/scala-2.11/mercury.jar /code/mercury.jar
@@ -41,5 +49,7 @@ RUN cd /tmp && \
 #    yes | cp -v /tmp/UnlimitedJCEPolicyJDK8/*.jar /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/
 
 EXPOSE 9100
+
+USER ${USER}
 
 ENTRYPOINT java -jar /code/mercury.jar
