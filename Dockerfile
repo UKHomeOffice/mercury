@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-alpine
+FROM quay.io/ukhomeofficedigital/openjdk8
 
 ENV USER user_hocs_reporting
 ENV GROUP group_hocs_reporting
