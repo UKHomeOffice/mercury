@@ -27,21 +27,6 @@ pipeline:
     when:
       event: push
 
-  integration:
-    image: docker/compose:1.10.1
-    privileged: true
-    environment:
-      - DOCKER_HOST=tcp://127.0.0.1:2375
-    commands:
-      - docker-compose up -d
-      - sleep 10
-      - docker-compose exec -T mercury sbt it:test
-      - docker-compose stop
-      - sleep 10
-      - docker-compose kill
-    when:
-      event: push
-
   image_to_quay:
     image: docker:1.13
     environment:
