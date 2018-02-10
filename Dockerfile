@@ -52,4 +52,4 @@ EXPOSE 9100
 
 USER ${USER}
 
-ENTRYPOINT java -jar /code/mercury.jar
+ENTRYPOINT java -jar /code/mercury.jar -XX:MaxPermSize=512m
