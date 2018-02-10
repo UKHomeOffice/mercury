@@ -18,10 +18,10 @@ ENV SBT_VERSION 1.0.1
 ENV SCALA_HOME /usr/share/scala
 ENV SBT_HOME /usr/share/sbt
 
-# Install APK dependencies
-RUN apk add --no-cache wget ca-certificates bash && \
-    update-ca-certificates && \
-    apk add --no-cache openssl
+# Install Yum dependencies
+RUN yum update -y \
+        && yum install -y wget ca-certificates openssl\
+        && yum clean all
 
 # Install Scala
 RUN cd /tmp && \
