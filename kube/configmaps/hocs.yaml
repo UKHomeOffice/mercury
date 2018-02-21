@@ -4,7 +4,7 @@ metadata:
   name: hocs
   namespace: hocs
 data:
-  web.services.hocs.uri: "https://alfresco.hocs.homeoffice.gov.uk"
+  web.services.hocs.uri: "https://hocs-alfresco.hocs-dev.svc.cluster.local"
   aws.sqs.uri: "https://sqs.eu-west-1.amazonaws.com/658718335966"
   aws.sqs.queues.mercury: hocs-mercury
   aws.s3.uri: "https://s3.eu-west-1.amazonaws.com"
