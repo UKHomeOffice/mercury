@@ -4,7 +4,7 @@ metadata:
   name: hocs
   namespace: hocs-qa
 data:
-  web.services.hocs.uri: "https://hocs-alfresco.hocs-dev.svc.cluster.local"
+  web.services.hocs.uri: "https://hocs-alfresco.hocs-qa.svc.cluster.local"
   aws.sqs.uri: "https://sqs.eu-west-1.amazonaws.com/449472082214"
   aws.sqs.queues.mercury: hocs-qa-mercury
   aws.s3.uri: "https://s3.eu-west-1.amazonaws.com"
