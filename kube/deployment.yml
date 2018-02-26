@@ -18,6 +18,58 @@ spec:
       labels:
         name: mercury
         app: mercury
+      annotations:
+        pod.beta.kubernetes.io/init-containers: '
+          [
+             {
+                "name": "vaultjks",
+                "image": "quay.io/ukhomeofficedigital/vaultjks:v0.1.0",
+                "imagePullPolicy": "Always",
+                "env": [
+                   {
+                      "name": "VAULT_ADDR",
+                      "value": "https://vault.vault.svc.cluster.local:8200"
+                   },
+                   {
+                      "name": "VAULT_TOKEN",
+                      "valueFrom": {
+                         "secretKeyRef": {
+                            "name": "store-token",
+                            "key": "token"
+                         }
+                      }
+                   },
+                   {
+                      "name": "VAULT_PKI_PATH",
+                      "value": "services/{{.KUBE_NAMESPACE}}/pki"
+                   },
+                   {
+                      "name": "VAULT_ROLE_NAME",
+                      "value": "default"
+                   },
+                   {
+                      "name": "SLEEP_FOREVER",
+                      "value": "false"
+                   },
+                   {
+                      "name": "IP_SAN",
+                      "valueFrom": {
+                         "fieldRef": {
+                            "apiVersion": "v1",
+                            "fieldPath": "status.podIP"
+                         }
+                      }
+                   }
+                ],
+                "volumeMounts": [
+                   {
+                      "mountPath": "/data",
+                      "name": "javapki"
+                   }
+                ]
+             }
+          ]
+        '
     spec:
       containers:
       - name: mercury
@@ -34,7 +86,7 @@ spec:
         - containerPort: 9100
         env:
         - name: JAVA_OPTS
-          value: '-Xms150m -Xmx1536m'
+          value: '-Xms150m -Xmx1536m -Djavax.net.ssl.trustStore=/data/truststore.jks'
         - name: WEB_SERVICES_HOCS_URI
           valueFrom:
             configMapKeyRef:
@@ -100,6 +152,10 @@ spec:
             secretKeyRef:
               name: hocs
               key: web.services.hocs.password
+        volumeMounts:
+          - mountPath: /data
+            name: javapki
+            readOnly: true
       - name: tls
         image: quay.io/ukhomeofficedigital/nginx-proxy:v1.7.0
         imagePullPolicy: Always
@@ -144,7 +200,7 @@ spec:
         args:
           - -output=/etc/secrets
           - -tls-skip-verify=true
-          - -cn=pki:services/$NAMESPACE/pki/issue/default:common_name=mercury.${NAMESPACE}.svc.cluster.local,file=/etc/keystore/tls,fmt=bundle
+          - -cn=pki:services/{{.KUBE_NAMESPACE}}/pki/issue/default:common_name=mercury.{{.KUBE_NAMESPACE}}.svc.cluster.local,file=/etc/keystore/tls,fmt=bundle
         env:
           - name: VAULT_ADDR
             value: "https://vault.vault.svc.cluster.local:8200"
@@ -163,3 +219,6 @@ spec:
       volumes:
         - name: certs
           emptyDir: {}
+        - name: javapki
+          emptyDir:
+            medium: "Memory"
