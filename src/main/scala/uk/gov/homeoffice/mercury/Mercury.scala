@@ -80,7 +80,8 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
 
   private def processEmail(resource: Resource): Future[Publication] = {
 
-    Thread.sleep((new Random().nextInt(10) * 1000) + 5000)
+    // Sleep 5 seconds because alfresco is proper shite.
+    Thread.sleep(5000)
 
     //Parse email from raw text
     val email = EmailParser.parse(resource.inputStream)
