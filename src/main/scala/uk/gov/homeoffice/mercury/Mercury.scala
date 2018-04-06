@@ -100,7 +100,7 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
         List(
             DataPart("caseType", caseType),
             DataPart("emailFrom", email.from),
-            DataPart("numberFiles", email.attachments.size),
+            DataPart("numberFiles", email.attachments.size.toString),
             filePart)
     ) map { response =>
       response.status match {
