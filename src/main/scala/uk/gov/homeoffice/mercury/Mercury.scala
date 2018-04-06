@@ -1,6 +1,7 @@
 package uk.gov.homeoffice.mercury
 
 import java.io.FileInputStream
+import java.util.Random
 
 import akka.http.scaladsl.model.MediaTypes._
 import akka.stream.scaladsl.{Source, StreamConverters}
@@ -78,6 +79,9 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
   }
 
   private def processEmail(resource: Resource): Future[Publication] = {
+
+    Thread.sleep((new Random().nextInt(10) * 1000) + 5000)
+
     //Parse email from raw text
     val email = EmailParser.parse(resource.inputStream)
     resource.inputStream.close()
@@ -91,8 +95,13 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
 
     info(s"""Publishing Case type $caseType to endpoint ${webService.host}$publicationEndpoint, resource with S3 key "${resource.key}"""")
 
-    webService endpoint publicationEndpoint withQueryString authorizationParam post Source(List(
-      DataPart("caseType", caseType), filePart)
+    webService endpoint publicationEndpoint withQueryString authorizationParam post
+      Source(
+        List(
+            DataPart("caseType", caseType),
+            DataPart("emailFrom", email.from),
+            DataPart("numberFiles", email.attachments.size),
+            filePart),
     ) map { response =>
       response.status match {
         case OK =>
@@ -125,6 +134,10 @@ class Mercury(val s3: S3, val webService: WebService with Authorization) extends
   }
 
   private def addAttachment(caseRef: String, emailAttachment: EmailAttachment): Future[Unit] = {
+
+    // Sleep 5 seconds because alfresco is proper shite.
+    Thread.sleep(5000)
+
     val data = StreamConverters.fromInputStream(() => emailAttachment.body.getInputStream)
     val filePart = FilePart("file", emailAttachment.name, Some(emailAttachment.contentType), data)
 
